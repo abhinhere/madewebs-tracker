@@ -216,7 +216,7 @@ export function RevenueAnalytics({ payments }: { payments: PaymentWithRelations[
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border-hsl))" />
               <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: "hsl(var(--muted-foreground-hsl))", fontSize: 12 }} />
               <YAxis hide />
-              <Tooltip formatter={(value: any) => formatCurrency(Number(value))} contentStyle={{ borderRadius: 8, border: "1px solid hsl(var(--border-hsl))", background: "hsl(var(--card-hsl))" }} />
+              <Tooltip formatter={(value: unknown) => formatCurrency(Number(value))} contentStyle={{ borderRadius: 8, border: "1px solid hsl(var(--border-hsl))", background: "hsl(var(--card-hsl))" }} />
               <Area type="monotone" dataKey="revenue" stroke="#0ea5e9" fill="url(#revenue)" strokeWidth={2} />
               <Area type="monotone" dataKey="profit" stroke="#10b981" fill="url(#profit)" strokeWidth={2} />
             </AreaChart>
@@ -229,7 +229,7 @@ export function RevenueAnalytics({ payments }: { payments: PaymentWithRelations[
   );
 }
 
-export function UpcomingDeadlines({ projects: upcomingProjects }: { projects: any[] }) {
+export function UpcomingDeadlines({ projects: upcomingProjects }: { projects: (ProjectWithRelations & { isOverdue: boolean })[] }) {
   return (
     <Card>
       <CardHeader>
@@ -338,7 +338,14 @@ export function ClientManagement({ clients }: { clients: Client[] }) {
 export function ActivityAndNotifications() {
   const mounted = useMounted();
 
-  const activities: any[] = [];
+  interface ActivityItem {
+    id: string;
+    actor: string;
+    action: string;
+    project: string;
+    time: string;
+  }
+  const activities: ActivityItem[] = [];
 
   return (
     <Card>
