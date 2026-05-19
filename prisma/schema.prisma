@@ -63,22 +63,24 @@ enum NotificationType {
 }
 
 model User {
-  id            String    @id @default(cuid())
-  name          String?
-  email         String    @unique
-  emailVerified DateTime?
-  image         String?
-  passwordHash  String?
-  role          Role      @default(EMPLOYEE)
-  position      String?
-  accounts      Account[]
-  sessions      Session[]
-  assignedProjects Project[] @relation("AssignedProjects")
-  tasks         Task[]
-  activities    ActivityLog[]
-  notifications Notification[]
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  id               String        @id @default(cuid())
+  name             String?
+  email            String        @unique
+  emailVerified    DateTime?
+  image            String?
+  passwordHash     String?
+  role             Role          @default(EMPLOYEE)
+  position         String?
+  capacity         Int           @default(4)
+  archived         Boolean       @default(false)
+  accounts         Account[]
+  sessions         Session[]
+  assignedProjects Project[]     @relation("AssignedProjects")
+  tasks            Task[]
+  activities       ActivityLog[]
+  notifications    Notification[]
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
 }
 
 model Account {
@@ -122,6 +124,7 @@ model Client {
   email         String        @unique
   companyName   String
   paymentStatus PaymentStatus @default(PENDING)
+  archived      Boolean       @default(false)
   projects      Project[]
   payments      Payment[]
   createdAt     DateTime      @default(now())
@@ -129,28 +132,30 @@ model Client {
 }
 
 model Project {
-  id                     String        @id @default(cuid())
-  clientId               String
-  assignedEmployeeId     String
-  name                   String
-  workType               WorkType
-  status                 ProjectStatus @default(NEW)
-  priority               Priority      @default(MEDIUM)
-  startDate              DateTime
-  deadline               DateTime
-  notes                  String?       @db.Text
-  reviewStatus           ReviewStatus  @default(PENDING_REVIEW)
-  instagramPostCompleted Boolean       @default(false)
-  instagramStoryCompleted Boolean      @default(false)
-  deliveryCompleted      Boolean       @default(false)
-  attachments            Attachment[]
-  client                 Client        @relation(fields: [clientId], references: [id], onDelete: Cascade)
-  assignedEmployee       User          @relation("AssignedProjects", fields: [assignedEmployeeId], references: [id])
-  tasks                  Task[]
-  payments               Payment[]
-  activities             ActivityLog[]
-  createdAt              DateTime      @default(now())
-  updatedAt              DateTime      @updatedAt
+  id                      String        @id @default(cuid())
+  clientId                String
+  assignedEmployeeId      String
+  name                    String
+  workType                WorkType
+  status                  ProjectStatus @default(NEW)
+  priority                Priority      @default(MEDIUM)
+  startDate               DateTime
+  deadline                DateTime
+  notes                   String?       @db.Text
+  reviewStatus            ReviewStatus  @default(PENDING_REVIEW)
+  instagramPostCompleted  Boolean       @default(false)
+  instagramStoryCompleted Boolean       @default(false)
+  deliveryCompleted       Boolean       @default(false)
+  taskCompletion          Int           @default(0)
+  archived                Boolean       @default(false)
+  attachments             Attachment[]
+  client                  Client        @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  assignedEmployee        User          @relation("AssignedProjects", fields: [assignedEmployeeId], references: [id])
+  tasks                   Task[]
+  payments                Payment[]
+  activities              ActivityLog[]
+  createdAt               DateTime      @default(now())
+  updatedAt               DateTime      @updatedAt
 }
 
 model Task {

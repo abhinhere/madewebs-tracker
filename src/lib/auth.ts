@@ -1,12 +1,10 @@
 import type { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
-import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { teamMembers } from "@/lib/seed-data";
 
 export const authOptions: NextAuthOptions = {
-  adapter: PrismaAdapter(prisma),
   session: {
     strategy: "jwt",
   },
@@ -25,9 +23,35 @@ export const authOptions: NextAuthOptions = {
           return null;
         }
 
+        const email = credentials.email.toLowerCase();
+
+        // 1. Auto-provision or authorize main admin
+        if (email === "abhin@madewebs.local" && credentials.password === "madewebs123") {
+          let admin = await prisma.user.findUnique({ where: { email } });
+          if (!admin) {
+            const passwordHash = await bcrypt.hash("madewebs123", 10);
+            admin = await prisma.user.create({
+              data: {
+                name: "Abhin",
+                email,
+                role: "ADMIN",
+                position: "Founder & Marketing Manager",
+                passwordHash,
+              },
+            });
+          }
+          return {
+            id: admin.id,
+            name: admin.name,
+            email: admin.email,
+            role: admin.role,
+          };
+        }
+
+        // 2. Standard DB check for other employees/managers
         try {
           const user = await prisma.user.findUnique({
-            where: { email: credentials.email },
+            where: { email },
           });
 
           if (user?.passwordHash && (await bcrypt.compare(credentials.password, user.passwordHash))) {
@@ -38,16 +62,8 @@ export const authOptions: NextAuthOptions = {
               role: user.role,
             };
           }
-        } catch {
-          const seededUser = teamMembers.find((member) => member.email === credentials.email);
-          if (seededUser && credentials.password === "madewebs123") {
-            return {
-              id: seededUser.id,
-              name: seededUser.name,
-              email: seededUser.email,
-              role: seededUser.role.toUpperCase(),
-            };
-          }
+        } catch (err) {
+          console.error("Auth database query error:", err);
         }
 
         return null;
