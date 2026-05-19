@@ -229,7 +229,19 @@ export function RevenueAnalytics({ payments }: { payments: PaymentWithRelations[
   );
 }
 
-export function UpcomingDeadlines({ projects: upcomingProjects }: { projects: (ProjectWithRelations & { isOverdue: boolean })[] }) {
+export function UpcomingDeadlines({
+  projects: upcomingProjects,
+}: {
+  projects: {
+    id: string;
+    name: string;
+    deadline: Date | string;
+    isOverdue: boolean;
+    priority: string;
+    assignedEmployee?: { name: string | null } | null;
+    client?: { name: string } | null;
+  }[];
+}) {
   return (
     <Card>
       <CardHeader>
