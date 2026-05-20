@@ -12,6 +12,7 @@ import {
   ListChecks,
   PanelsTopLeft,
   Search,
+  TrendingUp,
 } from "lucide-react";
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { Badge } from "@/components/ui/badge";
@@ -88,12 +89,14 @@ export function DashboardOverview({ projects, clients, payments }: DashboardOver
     const pendingRev = projects.filter((project) => project.reviewStatus !== "APPROVED");
     const monthlyRev = payments.reduce((total, p) => total + Number(p.amountPaid), 0);
     const pendingPay = payments.reduce((total, p) => total + Math.max(0, Number(p.totalPayment) - Number(p.amountPaid)), 0);
+    const totalProf = payments.reduce((total, p) => total + (Number(p.totalPayment) - Number(p.expenses)), 0);
 
     return {
       activeProjects: active.length,
       pendingReviews: pendingRev.length,
       monthlyRevenue: monthlyRev,
       pendingPayments: pendingPay,
+      totalProfit: totalProf,
     };
   }, [projects, payments]);
 
@@ -106,11 +109,12 @@ export function DashboardOverview({ projects, clients, payments }: DashboardOver
 
   return (
     <>
-      <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <section className="grid gap-3 grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
         <MetricCard title="Active projects" value={String(metrics.activeProjects)} helper="In planning, design, build, or review" icon={PanelsTopLeft} />
         <MetricCard title="Pending reviews" value={String(metrics.pendingReviews)} helper="Internal or client review needed" icon={ListChecks} />
         <MetricCard title="Monthly revenue" value={formatCurrency(metrics.monthlyRevenue)} helper="Collected from active accounts" icon={CircleDollarSign} />
         <MetricCard title="Pending payments" value={formatCurrency(metrics.pendingPayments)} helper="Open invoices and balances" icon={AlarmClock} tone="warning" />
+        <MetricCard title="Total profit" value={formatCurrency(metrics.totalProfit)} helper="Project value minus expenses" icon={TrendingUp} tone="success" />
       </section>
 
       <section className="grid gap-4 xl:grid-cols-[1.5fr_1fr]">
@@ -138,14 +142,18 @@ export function MetricCard({
   value: string;
   helper: string;
   icon: typeof Activity;
-  tone?: "default" | "warning";
+  tone?: "default" | "warning" | "success";
 }) {
   return (
     <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }}>
       <Card>
         <CardHeader className="flex-row items-center justify-between space-y-0 pb-3">
           <CardTitle className="text-muted-foreground">{title}</CardTitle>
-          <div className={cn("rounded-md border border-border p-2", tone === "warning" && "border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-300")}>
+          <div className={cn(
+            "rounded-md border border-border p-2",
+            tone === "warning" && "border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-300",
+            tone === "success" && "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950 dark:text-emerald-300"
+          )}>
             <Icon className="h-4 w-4" />
           </div>
         </CardHeader>

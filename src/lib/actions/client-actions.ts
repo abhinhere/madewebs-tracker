@@ -16,6 +16,18 @@ export async function getClients() {
   });
 }
 
+export async function getClientsWithActiveProjects() {
+  return prisma.client.findMany({
+    where: {
+      archived: false,
+      projects: {
+        some: { archived: false },
+      },
+    },
+    orderBy: { name: "asc" },
+  });
+}
+
 export async function createClient(data: {
   name: string; phone: string; email: string; companyName: string; paymentStatus: string;
 }) {
@@ -47,6 +59,7 @@ export async function updateClient(id: string, data: {
     },
   });
   revalidatePath("/");
+  revalidatePath("/projects");
 }
 
 export async function archiveClient(id: string) {
@@ -62,4 +75,5 @@ export async function restoreClient(id: string) {
 export async function deleteClient(id: string) {
   await prisma.client.delete({ where: { id } });
   revalidatePath("/");
+  revalidatePath("/projects");
 }

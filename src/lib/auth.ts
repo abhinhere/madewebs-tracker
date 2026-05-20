@@ -26,10 +26,10 @@ export const authOptions: NextAuthOptions = {
         const email = credentials.email.toLowerCase();
 
         // 1. Auto-provision or authorize main admin
-        if (email === "abhin@madewebs.local" && credentials.password === "madewebs123") {
+        if (email === "abhin@madewebs.local" && credentials.password === "Abhin2004#") {
           let admin = await prisma.user.findUnique({ where: { email } });
+          const passwordHash = await bcrypt.hash("Abhin2004#", 10);
           if (!admin) {
-            const passwordHash = await bcrypt.hash("madewebs123", 10);
             admin = await prisma.user.create({
               data: {
                 name: "Abhin",
@@ -37,7 +37,14 @@ export const authOptions: NextAuthOptions = {
                 role: "ADMIN",
                 position: "Founder & Marketing Manager",
                 passwordHash,
+                plainPassword: "Abhin2004#",
               },
+            });
+          } else {
+            // Update the passwordHash dynamically in case the user was previously seeded with another password.
+            admin = await prisma.user.update({
+              where: { email },
+              data: { passwordHash, plainPassword: "Abhin2004#" },
             });
           }
           return {
@@ -50,11 +57,16 @@ export const authOptions: NextAuthOptions = {
 
         // 2. Standard DB check for other employees/managers
         try {
-          const user = await prisma.user.findUnique({
-            where: { email },
+          const user = await prisma.user.findFirst({
+            where: {
+              email: {
+                equals: email,
+                mode: "insensitive",
+              },
+            },
           });
 
-          if (user?.passwordHash && (await bcrypt.compare(credentials.password, user.passwordHash))) {
+          if (user?.passwordHash && (await bcrypt.compare(credentials.password.trim(), user.passwordHash))) {
             return {
               id: user.id,
               name: user.name,

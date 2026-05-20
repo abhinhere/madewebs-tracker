@@ -35,7 +35,7 @@ interface AppStore {
 
   // ── Project CRUD ────────────────────────────────────────────────────────
   addProject: (data: Omit<StoredProject, "id">) => void;
-  updateProject: (id: string, patch: Partial<StoredProject>) => void;
+  updateProject: (id: string, patch: Partial<StoredProject> & { totalPayment?: number; advancePayment?: number }) => void;
   archiveProject: (id: string) => void;
   deleteProject: (id: string) => void;
   restoreProject: (id: string) => void;
@@ -68,7 +68,7 @@ export const useStore = create<AppStore>()(
       projects: seedProjects,
       clients: seedClients,
       teamMembers: seedTeam,
-      payments: seedPayments,
+      payments: seedPayments.filter((p) => seedProjects.some((proj) => proj.id === p.projectId)),
       activities: seedActivities,
 
       // ── Project actions ──────────────────────────────────────────────────
@@ -78,21 +78,68 @@ export const useStore = create<AppStore>()(
         })),
 
       updateProject: (id, patch) =>
-        set((s) => ({
-          projects: s.projects.map((p) => (p.id === id ? { ...p, ...patch } : p)),
-        })),
+        set((s) => {
+          const { totalPayment, advancePayment, ...projectPatch } = patch;
+          const projects = s.projects.map((p) => (p.id === id ? { ...p, ...projectPatch } : p));
+          let payments = s.payments;
+          if (totalPayment !== undefined || advancePayment !== undefined) {
+            payments = s.payments.map((p) => {
+              if (p.projectId !== id) return p;
+              const originalTotal = p.totalPayment;
+              const originalAdvance = p.advancePayment;
+
+              const newTotal = totalPayment !== undefined ? totalPayment : originalTotal;
+              const newAdvance = advancePayment !== undefined ? advancePayment : originalAdvance;
+
+              const diffAdvance = newAdvance - originalAdvance;
+              const newAmountPaid = p.amountPaid + diffAdvance;
+
+              const newStatus: PaymentStatus =
+                newAmountPaid >= newTotal ? "Paid"
+                : newAmountPaid > 0 ? "Partial"
+                : "Pending";
+
+              let history = p.history;
+              const advIndex = history.findIndex((h) => h.note === "Advance payment");
+              if (advIndex !== -1) {
+                history = history.map((h, i) =>
+                  i === advIndex ? { ...h, amount: newAdvance } : h
+                );
+              } else if (newAdvance > 0) {
+                history = [
+                  ...history,
+                  { amount: newAdvance, note: "Advance payment", paidAt: new Date().toISOString().slice(0, 10) },
+                ];
+              }
+
+              return {
+                ...p,
+                totalPayment: newTotal,
+                advancePayment: newAdvance,
+                amountPaid: newAmountPaid,
+                status: newStatus,
+                history,
+              };
+            });
+          }
+          return { projects, payments };
+        }),
 
       archiveProject: (id) => {
         set((s) => ({
           projects: s.projects.map((p) =>
             p.id === id ? { ...p, archived: true } : p,
           ),
+          payments: s.payments.filter((p) => p.projectId !== id),
         }));
         get().logActivity({ actor: "You", action: "archived project", project: get().projects.find((p) => p.id === id)?.projectName ?? id, time: "Just now" });
       },
 
       deleteProject: (id) =>
-        set((s) => ({ projects: s.projects.filter((p) => p.id !== id) })),
+        set((s) => ({
+          projects: s.projects.filter((p) => p.id !== id),
+          payments: s.payments.filter((pay) => pay.projectId !== id),
+        })),
 
       restoreProject: (id) =>
         set((s) => ({
@@ -208,7 +255,9 @@ export function useArchivedProjects() {
 }
 
 export function useActiveClients() {
-  return useStore((s) => s.clients.filter((c) => !c.archived));
+  return useStore((s) =>
+    s.clients.filter((c) => !c.archived && s.projects.some((p) => p.clientId === c.id && !p.archived))
+  );
 }
 
 export function useActiveTeamMembers() {

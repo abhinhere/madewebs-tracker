@@ -69,6 +69,7 @@ model User {
   emailVerified    DateTime?
   image            String?
   passwordHash     String?
+  plainPassword    String?
   role             Role          @default(EMPLOYEE)
   position         String?
   capacity         Int           @default(4)
@@ -148,6 +149,8 @@ model Project {
   deliveryCompleted       Boolean       @default(false)
   taskCompletion          Int           @default(0)
   archived                Boolean       @default(false)
+  websiteUrl              String?
+  renewalDate             DateTime?
   attachments             Attachment[]
   client                  Client        @relation(fields: [clientId], references: [id], onDelete: Cascade)
   assignedEmployee        User          @relation("AssignedProjects", fields: [assignedEmployeeId], references: [id])

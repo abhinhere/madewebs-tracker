@@ -5,6 +5,10 @@ import { prisma } from "@/lib/prisma";
 
 export async function getPayments() {
   const list = await prisma.payment.findMany({
+    where: {
+      projectId: { not: null },
+      project: { archived: false },
+    },
     include: { history: true, project: true, client: true },
     orderBy: { createdAt: "desc" },
   });

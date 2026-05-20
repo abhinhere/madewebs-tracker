@@ -34,6 +34,8 @@ type FormState = {
   instagramPostCompleted: boolean;
   instagramStoryCompleted: boolean;
   deliveryCompleted: boolean;
+  websiteUrl: string;
+  renewalDate: string;
 };
 
 const empty: FormState = {
@@ -43,6 +45,7 @@ const empty: FormState = {
   startDate: new Date().toISOString().slice(0, 10), deadline: "",
   notes: "", taskCompletion: 0,
   instagramPostCompleted: false, instagramStoryCompleted: false, deliveryCompleted: false,
+  websiteUrl: "", renewalDate: "",
 };
 
 interface Props {
@@ -88,13 +91,21 @@ export function ProjectModal({ open, onClose, project, clients, teamMembers = []
         instagramPostCompleted: project.instagramPostCompleted,
         instagramStoryCompleted: project.instagramStoryCompleted,
         deliveryCompleted: project.deliveryCompleted,
+        websiteUrl: project.websiteUrl ?? "",
+        renewalDate: project.renewalDate ? project.renewalDate.toISOString().slice(0, 10) : "",
       });
+      const payment = project.payments?.[0];
+      setTotalWorkAmount(payment ? String(payment.totalPayment) : "");
+      setAdvancePayment(payment ? String(payment.advancePayment) : "");
     } else {
-      setForm(empty);
+      setForm({
+        ...empty,
+        assignedEmployeeId: teamMembers?.[0]?.id || "",
+      });
+      setTotalWorkAmount("");
+      setAdvancePayment("");
     }
-    setTotalWorkAmount("");
-    setAdvancePayment("");
-  }, [project, open]);
+  }, [project, open, teamMembers]);
 
   function set<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((f) => ({ ...f, [key]: value }));
@@ -125,7 +136,11 @@ export function ProjectModal({ open, onClose, project, clients, teamMembers = []
       };
 
       if (project) {
-        await updateProject(project.id, projectData);
+        await updateProject(project.id, {
+          ...projectData,
+          totalPayment: Number(totalWorkAmount) || 0,
+          advancePayment: Number(advancePayment) || 0,
+        });
       } else {
         const newProj = await createProject(projectData);
         const total = Number(totalWorkAmount) || 0;
@@ -241,13 +256,35 @@ export function ProjectModal({ open, onClose, project, clients, teamMembers = []
               {WORK_TYPES.map((t) => <option key={t}>{t}</option>)}
             </Select>
           </div>
+
+          {form.workType === "Website" && (
+            <div className="col-span-2 grid grid-cols-2 gap-3 border border-dashed border-border rounded-lg p-3 bg-muted/5">
+              <div className="space-y-1.5">
+                <Label htmlFor="pm-web-url">Website URL</Label>
+                <Input
+                  id="pm-web-url"
+                  value={form.websiteUrl}
+                  onChange={(e) => set("websiteUrl", e.target.value)}
+                  placeholder="e.g. example.com"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="pm-renewal">Domain Renewal Date</Label>
+                <Input
+                  id="pm-renewal"
+                  type="date"
+                  value={form.renewalDate}
+                  onChange={(e) => set("renewalDate", e.target.value)}
+                />
+              </div>
+            </div>
+          )}
         </div>
 
         {!project && (
           <div className="space-y-1.5">
             <Label htmlFor="pm-assigned">Assigned to</Label>
             <Select id="pm-assigned" value={form.assignedEmployeeId} onChange={(e) => set("assignedEmployeeId", e.target.value)}>
-              <option value="">Unassigned</option>
               {members.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
             </Select>
           </div>
@@ -275,32 +312,30 @@ export function ProjectModal({ open, onClose, project, clients, teamMembers = []
           </div>
         )}
 
-        {!project && (
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <Label htmlFor="pm-total-amount">Total Work Amount (₹)</Label>
-              <Input
-                id="pm-total-amount"
-                type="number"
-                min={0}
-                value={totalWorkAmount}
-                onChange={(e) => setTotalWorkAmount(e.target.value)}
-                placeholder="e.g. 15000"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="pm-advance">Advance Payment (₹)</Label>
-              <Input
-                id="pm-advance"
-                type="number"
-                min={0}
-                value={advancePayment}
-                onChange={(e) => setAdvancePayment(e.target.value)}
-                placeholder="e.g. 5000"
-              />
-            </div>
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-1.5">
+            <Label htmlFor="pm-total-amount">Total Work Amount (₹)</Label>
+            <Input
+              id="pm-total-amount"
+              type="number"
+              min={0}
+              value={totalWorkAmount}
+              onChange={(e) => setTotalWorkAmount(e.target.value)}
+              placeholder="e.g. 15000"
+            />
           </div>
-        )}
+          <div className="space-y-1.5">
+            <Label htmlFor="pm-advance">Advance Payment (₹)</Label>
+            <Input
+              id="pm-advance"
+              type="number"
+              min={0}
+              value={advancePayment}
+              onChange={(e) => setAdvancePayment(e.target.value)}
+              placeholder="e.g. 5000"
+            />
+          </div>
+        </div>
 
         {project && (
           <div className="space-y-1.5">

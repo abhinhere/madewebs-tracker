@@ -2,7 +2,7 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { getProjects } from "@/lib/actions/project-actions";
-import { getClients } from "@/lib/actions/client-actions";
+import { getClientsWithActiveProjects } from "@/lib/actions/client-actions";
 import { getPayments } from "@/lib/actions/payment-actions";
 import { DashboardOverview } from "@/components/dashboard/agency-dashboard";
 import { EmployeeDashboard } from "@/components/dashboard/employee-dashboard";
@@ -18,7 +18,7 @@ export default async function Home() {
 
   const [projects, clients, payments] = await Promise.all([
     getProjects(),
-    getClients(),
+    getClientsWithActiveProjects(),
     getPayments(),
   ]);
 

@@ -37,7 +37,18 @@ async function main() {
   await prisma.user.deleteMany();
 
   console.log("Seeding fresh data...");
-  console.log("Database reset complete. No dummy datas seeded.");
+  const hashedPassword = await bcrypt.hash("Abhin2004#", 10);
+  await prisma.user.create({
+    data: {
+      name: "Abhin",
+      email: "abhin@madewebs.local",
+      role: "ADMIN",
+      position: "Founder & Marketing Manager",
+      passwordHash: hashedPassword,
+      plainPassword: "Abhin2004#",
+    }
+  });
+  console.log("Database reset complete. Main admin seeded.");
 }
 
 main()

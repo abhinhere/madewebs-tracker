@@ -75,11 +75,24 @@ export async function createProject(data: {
   instagramPostCompleted: boolean;
   instagramStoryCompleted: boolean;
   deliveryCompleted: boolean;
+  websiteUrl?: string;
+  renewalDate?: string;
 }) {
+  let employeeId = data.assignedEmployeeId;
+  if (!employeeId) {
+    const fallbackUser = await prisma.user.findFirst({
+      where: { email: "abhin@madewebs.local" },
+    }) || await prisma.user.findFirst();
+    if (!fallbackUser) {
+      throw new Error("No team member found in database to assign the project to.");
+    }
+    employeeId = fallbackUser.id;
+  }
+
   const project = await prisma.project.create({
     data: {
       clientId: data.clientId,
-      assignedEmployeeId: data.assignedEmployeeId,
+      assignedEmployeeId: employeeId,
       name: data.name,
       workType: toWorkType(data.workType),
       status: toStatus(data.status),
@@ -92,6 +105,8 @@ export async function createProject(data: {
       instagramPostCompleted: data.instagramPostCompleted,
       instagramStoryCompleted: data.instagramStoryCompleted,
       deliveryCompleted: data.deliveryCompleted,
+      websiteUrl: data.websiteUrl || null,
+      renewalDate: data.renewalDate ? new Date(data.renewalDate) : null,
     },
   });
   revalidatePath("/");
@@ -115,7 +130,19 @@ export async function updateProject(id: string, data: {
   deliveryCompleted?: boolean;
   assignedEmployeeId?: string;
   clientId?: string;
+  totalPayment?: number;
+  advancePayment?: number;
+  websiteUrl?: string | null;
+  renewalDate?: string | null;
 }) {
+  let employeeId = data.assignedEmployeeId;
+  if (employeeId === "") {
+    const fallbackUser = await prisma.user.findFirst({
+      where: { email: "abhin@madewebs.local" },
+    }) || await prisma.user.findFirst();
+    employeeId = fallbackUser?.id;
+  }
+
   await prisma.project.update({
     where: { id },
     data: {
@@ -131,10 +158,65 @@ export async function updateProject(id: string, data: {
       ...(data.instagramPostCompleted !== undefined && { instagramPostCompleted: data.instagramPostCompleted }),
       ...(data.instagramStoryCompleted !== undefined && { instagramStoryCompleted: data.instagramStoryCompleted }),
       ...(data.deliveryCompleted !== undefined && { deliveryCompleted: data.deliveryCompleted }),
-      ...(data.assignedEmployeeId && { assignedEmployeeId: data.assignedEmployeeId }),
+      ...(employeeId && { assignedEmployeeId: employeeId }),
       ...(data.clientId && { clientId: data.clientId }),
+      ...(data.websiteUrl !== undefined && { websiteUrl: data.websiteUrl }),
+      ...(data.renewalDate !== undefined && { renewalDate: data.renewalDate ? new Date(data.renewalDate) : null }),
     },
   });
+
+  if (data.totalPayment !== undefined || data.advancePayment !== undefined) {
+    const payment = await prisma.payment.findFirst({
+      where: { projectId: id },
+      include: { history: true },
+    });
+
+    if (payment) {
+      const originalTotal = Number(payment.totalPayment);
+      const originalAdvance = Number(payment.advancePayment);
+
+      const totalPayment = data.totalPayment !== undefined ? data.totalPayment : originalTotal;
+      const advancePayment = data.advancePayment !== undefined ? data.advancePayment : originalAdvance;
+
+      const diffAdvance = advancePayment - originalAdvance;
+      const newAmountPaid = Number(payment.amountPaid) + diffAdvance;
+
+      const newStatus =
+        newAmountPaid >= totalPayment ? "PAID"
+        : newAmountPaid > 0 ? "PARTIAL"
+        : "PENDING";
+
+      await prisma.payment.update({
+        where: { id: payment.id },
+        data: {
+          totalPayment,
+          advancePayment,
+          amountPaid: newAmountPaid,
+          status: newStatus,
+        },
+      });
+
+      const advanceHistory = payment.history.find((h) => h.note === "Advance payment");
+      if (advanceHistory) {
+        await prisma.paymentHistory.update({
+          where: { id: advanceHistory.id },
+          data: {
+            amount: advancePayment,
+          },
+        });
+      } else if (advancePayment > 0) {
+        await prisma.paymentHistory.create({
+          data: {
+            paymentId: payment.id,
+            amount: advancePayment,
+            note: "Advance payment",
+            paidAt: new Date(),
+          },
+        });
+      }
+    }
+  }
+
   revalidatePath("/");
   revalidatePath("/projects");
 }
@@ -152,7 +234,10 @@ export async function restoreProject(id: string) {
 }
 
 export async function deleteProject(id: string) {
-  await prisma.project.delete({ where: { id } });
+  await prisma.$transaction([
+    prisma.payment.deleteMany({ where: { projectId: id } }),
+    prisma.project.delete({ where: { id } }),
+  ]);
   revalidatePath("/");
   revalidatePath("/projects");
 }
