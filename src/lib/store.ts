@@ -11,7 +11,6 @@ import {
   type Project,
   type Payment,
   type Activity,
-  type ProjectStatus,
   type PaymentStatus,
 } from "@/lib/seed-data";
 

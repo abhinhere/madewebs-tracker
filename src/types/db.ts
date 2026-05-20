@@ -2,7 +2,7 @@
 // Pages pass these down to Client Components so we don't import Prisma types on the client.
 
 import type {
-  Project, Client, User, Payment, PaymentHistory, ActivityLog,
+  Project, Client, User, Payment, PaymentHistory,
 } from "@prisma/client";
 
 export type ProjectWithRelations = Project & {

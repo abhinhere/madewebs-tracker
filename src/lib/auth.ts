@@ -2,7 +2,6 @@ import type { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
-import { teamMembers } from "@/lib/seed-data";
 
 export const authOptions: NextAuthOptions = {
   session: {

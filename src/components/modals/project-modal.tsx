@@ -14,8 +14,6 @@ import type { Client, User } from "@prisma/client";
 import type { ProjectWithRelations } from "@/types/db";
 import { labelWorkType, labelStatus, labelPriority, labelReviewStatus } from "@/types/db";
 
-const STATUSES = ["New", "Planning", "Designing", "Development", "Review", "Revision", "Completed", "Delivered"];
-const PRIORITIES = ["Low", "Medium", "High", "Urgent"];
 const WORK_TYPES = ["Website", "Logo", "Poster", "Branding", "Web App", "SEO", "Maintenance"];
 const REVIEW_STATUSES = ["Pending review", "Client reviewing", "Approved", "Changes requested"];
 

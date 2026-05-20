@@ -6,29 +6,19 @@ import {
   Activity,
   AlarmClock,
   Bell,
-  CheckCircle2,
   CircleDollarSign,
-  Filter,
   ListChecks,
   PanelsTopLeft,
-  Search,
   TrendingUp,
 } from "lucide-react";
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Progress } from "@/components/ui/progress";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { cn, formatCurrency, formatDate, initials } from "@/lib/utils";
+import { cn, formatCurrency, initials } from "@/lib/utils";
 import type { ProjectWithRelations, PaymentWithRelations } from "@/types/db";
 import type { Client } from "@prisma/client";
 import {
-  labelStatus,
   labelPriority,
-  labelWorkType,
-  labelReviewStatus,
   labelPaymentStatus,
 } from "@/types/db";
 

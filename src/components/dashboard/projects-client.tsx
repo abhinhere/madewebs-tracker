@@ -2,9 +2,8 @@
 
 import { useState, useMemo, useTransition, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { motion } from "framer-motion";
 import {
-  ArchiveRestore, CheckCircle2, Edit, Filter, Plus, Search, Trash2,
+  CheckCircle2, Plus, Search, Trash2,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -18,18 +17,17 @@ import { ProjectModal } from "@/components/modals/project-modal";
 import { PaymentModal } from "@/components/modals/payment-modal";
 import { ClientModal } from "@/components/modals/client-modal";
 import {
-  archiveProject, deleteProject, restoreProject, updateProject,
+  deleteProject, updateProject,
 } from "@/lib/actions/project-actions";
-import type { ProjectWithRelations, PaymentWithRelations } from "@/types/db";
+import type { ProjectWithRelations } from "@/types/db";
 import type { Client, User } from "@prisma/client";
 import {
-  labelStatus, labelPriority, labelWorkType, labelReviewStatus,
-  labelPaymentStatus,
+  labelWorkType, labelReviewStatus,
 } from "@/types/db";
-import { cn, formatCurrency, formatDate, initials } from "@/lib/utils";
+import { cn, formatCurrency, formatDate } from "@/lib/utils";
 import { statusBadge } from "@/components/dashboard/agency-dashboard";
 
-const statusColumns = ["New", "Planning", "Designing", "Development", "Review", "Revision", "Completed", "Delivered"];
+
 
 interface Props {
   projects: ProjectWithRelations[];
@@ -82,7 +80,6 @@ export function ProjectsClient({ projects, clients, teamMembers }: Props) {
   const filtered = enriched.filter((p) => {
     if (showArchived !== p.archived) return false;
     const hay = `${p.client.name} ${p.name} ${p.assignedEmployee.name ?? ""}`.toLowerCase();
-    const uiStatus = labelStatus(p.status);
     const uiWork = labelWorkType(p.workType);
     return (
       hay.includes(query.toLowerCase()) &&
@@ -96,14 +93,7 @@ export function ProjectsClient({ projects, clients, teamMembers }: Props) {
   const selectClass = "h-9 rounded-md border border-input bg-background px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring";
 
   function openNew() { setEditingProject(null); setProjectModalOpen(true); }
-  function openEdit(p: ProjectWithRelations) { setEditingProject(p); setProjectModalOpen(true); }
 
-  function handleArchive(id: string) {
-    startTransition(() => { archiveProject(id); });
-  }
-  function handleRestore(id: string) {
-    startTransition(() => { restoreProject(id); });
-  }
   function handleDelete(id: string) {
     if (!confirm("Permanently delete this project? This cannot be undone.")) return;
     startTransition(() => { deleteProject(id); });
@@ -479,10 +469,4 @@ export function ProjectsClient({ projects, clients, teamMembers }: Props) {
   );
 }
 
-function CheckIcon({ active, label }: { active: boolean; label: string }) {
-  return (
-    <span title={label} className={cn("flex h-7 w-7 items-center justify-center rounded-md border border-border text-muted-foreground", active && "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950 dark:text-emerald-300")}>
-      <CheckCircle2 className="h-3.5 w-3.5" />
-    </span>
-  );
-}
+
