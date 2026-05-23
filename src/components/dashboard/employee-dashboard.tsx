@@ -1,14 +1,15 @@
 "use client";
 
 import { useTransition } from "react";
-import { CheckCircle2, Circle, Clock, AlertCircle, FileText, Calendar, Sparkles } from "lucide-react";
+import Image from "next/image";
+import { CheckCircle2, Circle, Clock, AlertCircle, FileText, Calendar } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { updateProject } from "@/lib/actions/project-actions";
 import { statusBadge } from "@/components/dashboard/agency-dashboard";
 import { Button } from "@/components/ui/button";
-import { formatDate } from "@/lib/utils";
+import { formatDate, formatCurrency } from "@/lib/utils";
 import type { ProjectWithRelations } from "@/types/db";
 
 interface Props {
@@ -21,6 +22,8 @@ export function EmployeeDashboard({ projects, employeeName }: Props) {
 
   const activeProjects = projects.filter((p) => !["COMPLETED", "DELIVERED"].includes(p.status));
   const completedProjects = projects.filter((p) => ["COMPLETED", "DELIVERED"].includes(p.status));
+  
+  const totalEarnings = projects.reduce((sum, p) => sum + (p.payments[0] ? Number(p.payments[0].employeeSalary || 0) : 0), 0);
 
   function toggleDeliverable(projectId: string, field: "instagramPostCompleted" | "instagramStoryCompleted" | "deliveryCompleted", currentVal: boolean) {
     startTransition(async () => {
@@ -70,7 +73,7 @@ export function EmployeeDashboard({ projects, employeeName }: Props) {
         <CardHeader className="flex flex-row items-center justify-between pb-4">
           <div className="space-y-1">
             <div className="flex items-center gap-2">
-              <Sparkles className="h-5 w-5 text-sky-500 animate-pulse" />
+              <Image src="/logo.png" alt="MadeWebs" width={24} height={24} className="object-contain animate-pulse" />
               <CardTitle className="text-xl font-bold tracking-tight">Welcome back, {employeeName}!</CardTitle>
             </div>
             <CardDescription className="text-muted-foreground">
@@ -82,7 +85,7 @@ export function EmployeeDashboard({ projects, employeeName }: Props) {
       </Card>
 
       {/* Metrics Row */}
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-4">
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">My active tasks</CardTitle>
@@ -99,6 +102,15 @@ export function EmployeeDashboard({ projects, employeeName }: Props) {
           <CardContent>
             <div className="text-2xl font-bold text-emerald-600">{completedProjects.length}</div>
             <p className="text-xs text-muted-foreground mt-1">Archived or finalized projects</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">My earnings</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-indigo-600">{formatCurrency(totalEarnings)}</div>
+            <p className="text-xs text-muted-foreground mt-1">Total from assigned projects</p>
           </CardContent>
         </Card>
         <Card>
@@ -141,6 +153,11 @@ export function EmployeeDashboard({ projects, employeeName }: Props) {
                     </p>
                   </div>
                   <div className="flex flex-wrap items-center gap-2">
+                    {project.payments[0] && Number(project.payments[0].employeeSalary) > 0 && (
+                      <Badge variant="success" className="bg-emerald-100 text-emerald-800 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-900">
+                        Payout: {formatCurrency(Number(project.payments[0].employeeSalary))}
+                      </Badge>
+                    )}
                     <Badge variant={statusBadge(uiStatus)}>{uiStatus}</Badge>
                     <Badge variant={isOverdue ? "danger" : "muted"} className="flex items-center gap-1">
                       <Calendar className="h-3 w-3 shrink-0" />

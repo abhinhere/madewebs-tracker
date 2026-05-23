@@ -67,7 +67,7 @@ export function DashboardOverview({ projects, clients, payments }: DashboardOver
           paymentStatus: payment?.status ?? "PENDING",
           totalPayment: payment ? Number(payment.totalPayment) : 0,
           pendingAmount: payment ? Number(payment.totalPayment) - Number(payment.amountPaid) : 0,
-          profit: payment ? Number(payment.totalPayment) - Number(payment.expenses) : 0,
+          profit: payment ? Number(payment.totalPayment) - Number(payment.expenses) - Number(payment.employeeSalary || 0) : 0,
           isOverdue: new Date(project.deadline) < today && !["COMPLETED", "DELIVERED"].includes(project.status),
         };
       }),
@@ -79,7 +79,7 @@ export function DashboardOverview({ projects, clients, payments }: DashboardOver
     const pendingRev = projects.filter((project) => project.reviewStatus !== "APPROVED");
     const monthlyRev = payments.reduce((total, p) => total + Number(p.amountPaid), 0);
     const pendingPay = payments.reduce((total, p) => total + Math.max(0, Number(p.totalPayment) - Number(p.amountPaid)), 0);
-    const totalProf = payments.reduce((total, p) => total + (Number(p.totalPayment) - Number(p.expenses)), 0);
+    const totalProf = payments.reduce((total, p) => total + (Number(p.totalPayment) - Number(p.expenses) - Number(p.employeeSalary || 0)), 0);
 
     return {
       activeProjects: active.length,
@@ -174,7 +174,7 @@ export function RevenueAnalytics({ payments }: { payments: PaymentWithRelations[
       });
 
       const revenue = monthPayments.reduce((sum, p) => sum + Number(p.amountPaid), 0);
-      const expenses = monthPayments.reduce((sum, p) => sum + Number(p.expenses), 0);
+      const expenses = monthPayments.reduce((sum, p) => sum + Number(p.expenses) + Number(p.employeeSalary || 0), 0);
       const profit = Math.max(0, revenue - expenses);
 
       last6Months.push({
@@ -229,6 +229,8 @@ export function RevenueAnalytics({ payments }: { payments: PaymentWithRelations[
 
 export function UpcomingDeadlines({
   projects: upcomingProjects,
+  title = "Upcoming deadlines",
+  description = "Calendar-aware delivery queue with overdue highlighting.",
 }: {
   projects: {
     id: string;
@@ -239,12 +241,14 @@ export function UpcomingDeadlines({
     assignedEmployee?: { name: string | null } | null;
     client?: { name: string } | null;
   }[];
+  title?: string;
+  description?: string;
 }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Upcoming deadlines</CardTitle>
-        <CardDescription>Calendar-aware delivery queue with overdue highlighting.</CardDescription>
+        <CardTitle>{title}</CardTitle>
+        <CardDescription>{description}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-3">
         {upcomingProjects.map((project) => {
@@ -276,7 +280,7 @@ export function PaymentTracker({ payments }: { payments: PaymentWithRelations[] 
     return payments.map((payment) => ({
       ...payment,
       projectName: payment.project?.name ?? "No Project",
-      profit: Number(payment.totalPayment) - Number(payment.expenses),
+      profit: Number(payment.totalPayment) - Number(payment.expenses) - Number(payment.employeeSalary || 0),
       pending: Number(payment.totalPayment) - Number(payment.amountPaid),
     }));
   }, [payments]);
@@ -299,9 +303,10 @@ export function PaymentTracker({ payments }: { payments: PaymentWithRelations[] 
                 </div>
                 <Badge variant={statusBadge(uiStatus)}>{uiStatus}</Badge>
               </div>
-              <div className="mt-3 grid grid-cols-3 gap-2 text-xs">
+              <div className="mt-3 grid grid-cols-4 gap-2 text-xs">
                 <span className="text-muted-foreground">Advance<br /><b className="text-foreground">{formatCurrency(Number(payment.advancePayment))}</b></span>
                 <span className="text-muted-foreground">Expenses<br /><b className="text-foreground">{formatCurrency(Number(payment.expenses))}</b></span>
+                <span className="text-muted-foreground">Salary<br /><b className="text-foreground">{formatCurrency(Number(payment.employeeSalary || 0))}</b></span>
                 <span className="text-muted-foreground">Pending<br /><b className="text-foreground">{formatCurrency(payment.pending)}</b></span>
               </div>
             </div>

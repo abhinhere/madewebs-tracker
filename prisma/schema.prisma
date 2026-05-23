@@ -181,6 +181,7 @@ model Payment {
   advancePayment Decimal  @default(0) @db.Decimal(12, 2)
   totalPayment   Decimal  @db.Decimal(12, 2)
   expenses       Decimal  @default(0) @db.Decimal(12, 2)
+  employeeSalary Decimal  @default(0) @db.Decimal(12, 2)
   amountPaid     Decimal  @default(0) @db.Decimal(12, 2)
   status         PaymentStatus @default(PENDING)
   paidAt         DateTime?

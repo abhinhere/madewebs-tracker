@@ -15,6 +15,7 @@ type PaymentWithHistory = Omit<Payment, "totalPayment" | "advancePayment" | "amo
   advancePayment: number;
   amountPaid: number;
   expenses: number;
+  employeeSalary?: number;
   history: (Omit<PaymentHistory, "amount"> & { amount: number })[];
 };
 
@@ -29,11 +30,13 @@ export function PaymentModal({ open, onClose, payment, projectName }: Props) {
   const [amount, setAmount] = useState("");
   const [note, setNote] = useState("");
   const [expenses, setExpenses] = useState("");
+  const [employeeSalary, setEmployeeSalary] = useState("");
   const [totalPayment, setTotalPayment] = useState("");
   const [isPending, startTransition] = useTransition();
 
   useEffect(() => {
     setExpenses(String(payment?.expenses ?? ""));
+    setEmployeeSalary(payment?.employeeSalary ? String(payment.employeeSalary) : "");
     setTotalPayment(String(payment?.totalPayment ?? ""));
     setAmount("");
     setNote("");
@@ -54,6 +57,7 @@ export function PaymentModal({ open, onClose, payment, projectName }: Props) {
       await updatePaymentFinancials(payment.id, {
         totalPayment: Number(totalPayment),
         expenses: Number(expenses),
+        employeeSalary: Number(employeeSalary),
       });
       onClose();
     });
@@ -96,14 +100,18 @@ export function PaymentModal({ open, onClose, payment, projectName }: Props) {
 
         <div className="space-y-3 rounded-lg border border-border p-4">
           <p className="text-sm font-medium">Update financials</p>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-3 gap-3 items-end">
             <div className="space-y-1.5">
-              <Label htmlFor="pay-total">Total amount (₹)</Label>
+              <Label htmlFor="pay-total" className="whitespace-nowrap">Total (₹)</Label>
               <Input id="pay-total" type="number" value={totalPayment} onChange={(e) => setTotalPayment(e.target.value)} />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="pay-expenses">Expenses (₹)</Label>
+              <Label htmlFor="pay-expenses" className="whitespace-nowrap">Expenses (₹)</Label>
               <Input id="pay-expenses" type="number" value={expenses} onChange={(e) => setExpenses(e.target.value)} />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="pay-salary" className="whitespace-nowrap">Salary (₹)</Label>
+              <Input id="pay-salary" type="number" value={employeeSalary} onChange={(e) => setEmployeeSalary(e.target.value)} placeholder={totalPayment ? `75% = ${Math.round(Number(totalPayment) * 0.75)}` : ""} />
             </div>
           </div>
           <Button variant="outline" onClick={handleUpdateFinancials} disabled={isPending} className="w-full">

@@ -88,9 +88,15 @@ export function TeamClient({ members, projects }: Props) {
               >
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <div className="flex items-center gap-3 min-w-0">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-secondary text-xs font-semibold">
-                      {initials(member.name ?? "")}
-                    </div>
+                    {member.image ? (
+                      <div className="h-10 w-10 shrink-0 overflow-hidden rounded-md border border-border">
+                        <img src={member.image} alt={member.name || "Team member"} className="h-full w-full object-cover" />
+                      </div>
+                    ) : (
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-secondary text-xs font-semibold">
+                        {initials(member.name ?? "")}
+                      </div>
+                    )}
                     <div className="min-w-0 flex-1 space-y-1">
                       <p className="font-medium truncate">{member.name}</p>
                       <p className="text-xs text-muted-foreground truncate">{member.position} · {member.email}</p>
@@ -168,9 +174,15 @@ export function TeamClient({ members, projects }: Props) {
 
         <DialogBody className="space-y-4">
           <div className="flex items-center gap-3 bg-muted/10 p-3 rounded-lg border border-border">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-md bg-secondary text-sm font-semibold">
-              {selectedMember ? initials(selectedMember.name ?? "") : ""}
-            </div>
+            {selectedMember?.image ? (
+              <div className="h-12 w-12 shrink-0 overflow-hidden rounded-md border border-border">
+                <img src={selectedMember.image} alt={selectedMember.name || "Member"} className="h-full w-full object-cover" />
+              </div>
+            ) : (
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-md bg-secondary text-sm font-semibold">
+                {selectedMember ? initials(selectedMember.name ?? "") : ""}
+              </div>
+            )}
             <div className="min-w-0 flex-1">
               <h3 className="font-semibold text-foreground truncate">{selectedMember?.name}</h3>
               <p className="text-xs text-muted-foreground truncate">{selectedMember?.position}</p>

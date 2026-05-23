@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { useSession, signOut } from "next-auth/react";
 import {
   CalendarDays,
@@ -52,8 +53,8 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
       >
         <div className="flex items-center justify-between px-2 py-3 border-b border-border pb-4">
           <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-foreground text-background">
-              <Sparkles className="h-4 w-4" />
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg overflow-hidden bg-transparent">
+              <Image src="/logo.png" alt="MadeWebs" width={36} height={36} className="object-contain" />
             </div>
             <div>
               <p className="text-sm font-semibold">MadeWebs</p>
@@ -110,8 +111,8 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
       {/* Desktop Sidebar Layout */}
       <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 border-r border-border bg-sidebar p-4 lg:block">
         <div className="flex items-center gap-3 px-2 py-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-foreground text-background">
-            <Sparkles className="h-4 w-4" />
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg overflow-hidden bg-transparent">
+            <Image src="/logo.png" alt="MadeWebs" width={36} height={36} className="object-contain" />
           </div>
           <div>
             <p className="text-sm font-semibold">MadeWebs Tracker</p>

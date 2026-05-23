@@ -255,7 +255,7 @@ export function ProjectModal({ open, onClose, project, clients, teamMembers = []
             </Select>
           </div>
 
-          {form.workType === "Website" && (
+          {project && form.workType === "Website" && (
             <div className="col-span-2 grid grid-cols-2 gap-3 border border-dashed border-border rounded-lg p-3 bg-muted/5">
               <div className="space-y-1.5">
                 <Label htmlFor="pm-web-url">Website URL</Label>

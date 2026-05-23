@@ -18,6 +18,7 @@ export async function getPayments() {
     advancePayment: Number(p.advancePayment),
     amountPaid: Number(p.amountPaid),
     expenses: Number(p.expenses),
+    employeeSalary: Number(p.employeeSalary),
     history: p.history.map((h) => ({
       ...h,
       amount: Number(h.amount),
@@ -26,13 +27,14 @@ export async function getPayments() {
 }
 
 export async function updatePaymentFinancials(id: string, data: {
-  totalPayment?: number; expenses?: number;
+  totalPayment?: number; expenses?: number; employeeSalary?: number;
 }) {
   await prisma.payment.update({
     where: { id },
     data: {
       ...(data.totalPayment !== undefined && { totalPayment: data.totalPayment }),
       ...(data.expenses !== undefined && { expenses: data.expenses }),
+      ...(data.employeeSalary !== undefined && { employeeSalary: data.employeeSalary }),
     },
   });
   revalidatePath("/");
@@ -71,6 +73,7 @@ export async function createPaymentForProject(data: {
   totalPayment: number;
   advancePayment: number;
   expenses: number;
+  employeeSalary?: number;
 }) {
   await prisma.payment.create({
     data: {
@@ -80,6 +83,7 @@ export async function createPaymentForProject(data: {
       advancePayment: data.advancePayment,
       amountPaid: data.advancePayment,
       expenses: data.expenses,
+      employeeSalary: data.employeeSalary ?? 0,
       status: data.advancePayment >= data.totalPayment ? "PAID" : data.advancePayment > 0 ? "PARTIAL" : "PENDING",
       history: data.advancePayment > 0 ? {
         create: { amount: data.advancePayment, note: "Advance payment", paidAt: new Date() }

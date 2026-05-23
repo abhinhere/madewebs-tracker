@@ -31,8 +31,21 @@ export default async function CalendarPage() {
 
   return (
     <div className="space-y-6">
-      <h2 className="text-xl font-semibold">Calendar</h2>
-      <UpcomingDeadlines projects={upcoming} />
+      <div>
+        <h2 className="text-xl font-semibold tracking-tight">{isAdmin ? "Agency Calendar" : "My Calendar"}</h2>
+        <p className="text-sm text-muted-foreground mt-1">
+          {isAdmin 
+            ? "Overview of all agency deadlines and deliverables." 
+            : "Your personal schedule and upcoming project tasks."}
+        </p>
+      </div>
+      <UpcomingDeadlines 
+        projects={upcoming} 
+        title={isAdmin ? "All upcoming deadlines" : "Your assigned tasks"}
+        description={isAdmin 
+          ? "Calendar-aware delivery queue for all agency projects." 
+          : "Delivery queue for projects assigned to you."}
+      />
     </div>
   );
 }
