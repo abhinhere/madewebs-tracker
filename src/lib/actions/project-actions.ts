@@ -43,7 +43,7 @@ export async function getProjects() {
       advancePayment: Number(pay.advancePayment),
       amountPaid: Number(pay.amountPaid),
       expenses: Number(pay.expenses),
-      employeeSalary: Number(pay.employeeSalary),
+      employeeSalary: Number((pay as any).employeeSalary),
       history: pay.history.map((h) => ({
         ...h,
         amount: Number(h.amount),

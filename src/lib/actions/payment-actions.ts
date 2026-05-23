@@ -18,7 +18,7 @@ export async function getPayments() {
     advancePayment: Number(p.advancePayment),
     amountPaid: Number(p.amountPaid),
     expenses: Number(p.expenses),
-    employeeSalary: Number(p.employeeSalary),
+    employeeSalary: Number((p as any).employeeSalary),
     history: p.history.map((h) => ({
       ...h,
       amount: Number(h.amount),
