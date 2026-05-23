@@ -8,20 +8,22 @@ import type {
 export type ProjectWithRelations = Project & {
   client: Client;
   assignedEmployee: User;
-  payments: (Omit<Payment, "totalPayment" | "advancePayment" | "amountPaid" | "expenses"> & {
+  payments: (Omit<Payment, "totalPayment" | "advancePayment" | "amountPaid" | "expenses" | "employeeSalary"> & {
     totalPayment: number;
     advancePayment: number;
     amountPaid: number;
     expenses: number;
+    employeeSalary?: number;
     history: (Omit<PaymentHistory, "amount"> & { amount: number })[];
   })[];
 };
 
-export type PaymentWithRelations = Omit<Payment, "totalPayment" | "advancePayment" | "amountPaid" | "expenses"> & {
+export type PaymentWithRelations = Omit<Payment, "totalPayment" | "advancePayment" | "amountPaid" | "expenses" | "employeeSalary"> & {
   totalPayment: number;
   advancePayment: number;
   amountPaid: number;
   expenses: number;
+  employeeSalary?: number;
   history: (Omit<PaymentHistory, "amount"> & { amount: number })[];
   project: Project | null;
   client: Client;
