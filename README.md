@@ -1,4 +1,4 @@
-# MadeWebs Tracker
+# MadeWebs Tracker 2.0
 
 Modern agency management dashboard for projects, clients, payments, reviews, deadlines, team workload, and social media delivery.
 

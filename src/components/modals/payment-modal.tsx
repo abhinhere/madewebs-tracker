@@ -10,7 +10,7 @@ import { recordPayment, updatePaymentFinancials } from "@/lib/actions/payment-ac
 import type { Payment, PaymentHistory } from "@prisma/client";
 import { formatCurrency } from "@/lib/utils";
 
-type PaymentWithHistory = Omit<Payment, "totalPayment" | "advancePayment" | "amountPaid" | "expenses"> & {
+type PaymentWithHistory = Omit<Payment, "totalPayment" | "advancePayment" | "amountPaid" | "expenses" | "employeeSalary"> & {
   totalPayment: number;
   advancePayment: number;
   amountPaid: number;
