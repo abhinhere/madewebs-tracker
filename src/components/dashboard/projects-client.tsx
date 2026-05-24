@@ -136,125 +136,118 @@ export function ProjectsClient({ projects, clients, teamMembers }: Props) {
           )}
         </CardHeader>
         <CardContent className="overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Project</TableHead>
-                <TableHead>Assigned to</TableHead>
-                <TableHead>Review</TableHead>
-                <TableHead>Website & Renewal</TableHead>
-                <TableHead>Deadline</TableHead>
-                <TableHead>Progress</TableHead>
-                <TableHead className="text-right">Pending</TableHead>
-                <TableHead></TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filtered.length === 0 && (
-                <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground py-8">No projects found</TableCell></TableRow>
-              )}
-              {filtered.map((p) => (
-                <TableRow key={p.id} className={p.isOverdue ? "bg-red-50/60 dark:bg-red-950/20" : undefined}>
-                  <TableCell>
-                    <div className="min-w-48">
-                      <p className="font-medium">{p.name}</p>
-                      <div className="text-xs text-muted-foreground flex items-center gap-1">
-                        <button
-                          type="button"
-                          onClick={() => setEditingClient(p.client)}
-                          className="hover:text-foreground underline decoration-dotted underline-offset-2 hover:decoration-solid transition-colors font-medium text-left cursor-pointer"
-                        >
-                          {p.client.name}
-                        </button>
-                        <span>· {labelWorkType(p.workType)}</span>
-                      </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+            {filtered.length === 0 && (
+              <div className="col-span-full text-center text-muted-foreground py-8">No projects found</div>
+            )}
+            {filtered.map((p) => (
+              <div key={p.id} className={cn("flex flex-col rounded-xl border border-border bg-card shadow-sm transition-all hover:shadow-md", p.isOverdue && "border-red-200 bg-red-50/30 dark:border-red-900/50 dark:bg-red-950/10")}>
+                <div className="flex items-start justify-between p-4 border-b border-border/50">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <h3 className="font-semibold text-base truncate">{p.name}</h3>
+                      <span className="shrink-0 text-[10px] uppercase tracking-wider font-semibold text-muted-foreground bg-muted px-2 py-0.5 rounded-full">{labelWorkType(p.workType)}</span>
                     </div>
-                  </TableCell>
-                  <TableCell className="text-sm">{p.assignedEmployee.name}</TableCell>
-                  <TableCell>
                     <button
                       type="button"
-                      onClick={() => setEditingReviewProject(p)}
-                      className="focus:outline-none cursor-pointer block"
+                      onClick={() => setEditingClient(p.client)}
+                      className="text-sm text-muted-foreground hover:text-foreground underline decoration-dotted underline-offset-2 hover:decoration-solid transition-colors text-left cursor-pointer truncate max-w-full block"
                     >
-                      <Badge
-                        variant={statusBadge(labelReviewStatus(p.reviewStatus))}
-                        className="hover:opacity-80 transition-opacity"
-                      >
-                        {labelReviewStatus(p.reviewStatus)}
-                      </Badge>
+                      {p.client.name}
                     </button>
-                  </TableCell>
-                  <TableCell>
-                    {labelWorkType(p.workType) === "Website" ? (
+                  </div>
+                  <div className="flex shrink-0 items-center gap-1 ml-2">
+                     <button onClick={() => handleDelete(p.id)} className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:bg-red-100 hover:text-red-600 dark:hover:bg-red-950 dark:hover:text-red-400" title="Delete">
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
+
+                <div className="flex-1 p-4 space-y-4 text-sm">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <p className="text-xs text-muted-foreground mb-1">Assigned</p>
+                      <p className="font-medium truncate">{p.assignedEmployee.name}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground mb-1">Deadline</p>
+                      <p className={cn("font-medium", p.isOverdue && "text-red-600 dark:text-red-400")}>
+                        {formatDate(p.deadline.toISOString())}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <p className="text-xs text-muted-foreground mb-1">Review Status</p>
                       <button
                         type="button"
-                        onClick={() => {
-                          setEditingWebsiteProject(p);
-                          setTempWebsiteUrl(p.websiteUrl ?? "");
-                          setTempRenewalDate(p.renewalDate ? new Date(p.renewalDate).toISOString().slice(0, 10) : "");
-                        }}
-                        className="text-xs text-left hover:text-foreground cursor-pointer focus:outline-none block"
+                        onClick={() => setEditingReviewProject(p)}
+                        className="focus:outline-none cursor-pointer text-left block"
                       >
-                        {p.websiteUrl || p.renewalDate ? (
-                          <div className="space-y-0.5 min-w-[120px]">
-                            {p.websiteUrl && (
-                              <div className="font-medium text-primary hover:underline flex items-center gap-1">
-                                <span>{p.websiteUrl}</span>
-                              </div>
-                            )}
-                            {p.renewalDate && (
-                              <div className="text-muted-foreground text-[10px]">
-                                Renewal: {formatDate(new Date(p.renewalDate).toISOString())}
-                              </div>
-                            )}
-                          </div>
-                        ) : (
-                          <span className="inline-flex items-center gap-1 rounded-md border border-dashed border-muted-foreground/45 px-2 py-1 text-[11px] text-muted-foreground hover:bg-accent/40 transition-colors">
-                            + Add URL / Renewal
-                          </span>
-                        )}
-                      </button>
-                    ) : (
-                      <span className="text-muted-foreground/30 text-xs">—</span>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <span className={cn(p.isOverdue && "font-medium text-red-600 dark:text-red-400")}>{formatDate(p.deadline.toISOString())}</span>
-                  </TableCell>
-                   <TableCell>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setEditingProgressProject(p);
-                        setTempProgress(p.taskCompletion);
-                      }}
-                      className="flex items-center gap-2 min-w-24 w-full hover:opacity-85 transition-opacity text-left cursor-pointer focus:outline-none"
-                    >
-                      <Progress value={p.taskCompletion} className="h-1.5 flex-1" />
-                      <span className="text-xs text-muted-foreground font-medium hover:text-foreground transition-colors">{p.taskCompletion}%</span>
-                    </button>
-                  </TableCell>
-
-                  <TableCell className="text-right">
-                    <button
-                      className="text-sm hover:underline"
-                      onClick={() => setPaymentProject(p)}
-                    >
-                      {formatCurrency(p.pendingAmount)}
-                    </button>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-1">
-                      <button onClick={() => handleDelete(p.id)} className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:bg-red-100 hover:text-red-600 dark:hover:bg-red-950 dark:hover:text-red-400" title="Delete">
-                        <Trash2 className="h-3.5 w-3.5" />
+                        <Badge variant={statusBadge(labelReviewStatus(p.reviewStatus))} className="hover:opacity-80">
+                          {labelReviewStatus(p.reviewStatus)}
+                        </Badge>
                       </button>
                     </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+                    
+                    <div className="min-w-0">
+                      <p className="text-xs text-muted-foreground mb-1">Website</p>
+                      {labelWorkType(p.workType) === "Website" ? (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setEditingWebsiteProject(p);
+                            setTempWebsiteUrl(p.websiteUrl ?? "");
+                            setTempRenewalDate(p.renewalDate ? new Date(p.renewalDate).toISOString().slice(0, 10) : "");
+                          }}
+                          className="text-xs text-left hover:text-foreground cursor-pointer focus:outline-none block w-full"
+                        >
+                          {p.websiteUrl || p.renewalDate ? (
+                            <div className="space-y-0.5 truncate">
+                              {p.websiteUrl && <div className="font-medium text-primary hover:underline truncate">{p.websiteUrl}</div>}
+                              {p.renewalDate && <div className="text-muted-foreground text-[10px]">Renews: {formatDate(new Date(p.renewalDate).toISOString())}</div>}
+                            </div>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 rounded-md border border-dashed border-muted-foreground/45 px-2 py-0.5 text-[11px] text-muted-foreground hover:bg-accent/40 transition-colors">
+                              + Add Details
+                            </span>
+                          )}
+                        </button>
+                      ) : (
+                        <span className="text-muted-foreground/30">—</span>
+                      )}
+                    </div>
+                  </div>
+
+                  <div>
+                     <p className="text-xs text-muted-foreground mb-1">Progress</p>
+                     <button
+                       type="button"
+                       onClick={() => {
+                         setEditingProgressProject(p);
+                         setTempProgress(p.taskCompletion);
+                       }}
+                       className="flex items-center gap-2 w-full hover:opacity-85 transition-opacity text-left cursor-pointer focus:outline-none"
+                     >
+                       <Progress value={p.taskCompletion} className="h-1.5 flex-1" />
+                       <span className="text-xs text-muted-foreground font-medium">{p.taskCompletion}%</span>
+                     </button>
+                  </div>
+                </div>
+
+                <div className="p-4 pt-3 border-t border-border/50 bg-muted/10 rounded-b-xl flex items-center justify-between">
+                  <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Pending Payment</span>
+                  <button
+                    className="text-sm font-semibold hover:underline text-foreground"
+                    onClick={() => setPaymentProject(p)}
+                  >
+                    {formatCurrency(p.pendingAmount)}
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
         </CardContent>
       </Card>
 
