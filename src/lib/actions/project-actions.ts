@@ -43,6 +43,7 @@ export async function getProjects() {
       advancePayment: Number(pay.advancePayment),
       amountPaid: Number(pay.amountPaid),
       expenses: Number(pay.expenses),
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       employeeSalary: Number((pay as any).employeeSalary),
       history: pay.history.map((h) => ({
         ...h,

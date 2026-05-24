@@ -18,6 +18,7 @@ export async function getPayments() {
     advancePayment: Number(p.advancePayment),
     amountPaid: Number(p.amountPaid),
     expenses: Number(p.expenses),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     employeeSalary: Number((p as any).employeeSalary),
     history: p.history.map((h) => ({
       ...h,
