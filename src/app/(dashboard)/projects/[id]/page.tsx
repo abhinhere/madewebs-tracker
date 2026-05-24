@@ -36,19 +36,21 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
   }
 
   // Convert decimal to numbers for client components
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const p = project as any;
   const serializedProject = {
     ...project,
-    totalAmount: Number(project.totalAmount),
-    advanceAmount: Number(project.advanceAmount),
-    domainCharge: Number(project.domainCharge),
-    finalPaymentAmount: Number(project.finalPaymentAmount),
-    payments: project.payments.map((p) => ({
-      ...p,
-      advancePayment: Number(p.advancePayment),
-      totalPayment: Number(p.totalPayment),
-      expenses: Number(p.expenses),
-      employeeSalary: Number(p.employeeSalary),
-      amountPaid: Number(p.amountPaid),
+    totalAmount: Number(p.totalAmount ?? 0),
+    advanceAmount: Number(p.advanceAmount ?? 0),
+    domainCharge: Number(p.domainCharge ?? 0),
+    finalPaymentAmount: Number(p.finalPaymentAmount ?? 0),
+    payments: project.payments.map((pay) => ({
+      ...pay,
+      advancePayment: Number(pay.advancePayment),
+      totalPayment: Number(pay.totalPayment),
+      expenses: Number(pay.expenses),
+      employeeSalary: Number((pay as any).employeeSalary ?? 0),
+      amountPaid: Number(pay.amountPaid),
     })),
   };
 
