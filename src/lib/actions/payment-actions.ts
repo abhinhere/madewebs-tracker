@@ -76,20 +76,23 @@ export async function createPaymentForProject(data: {
   expenses: number;
   employeeSalary?: number;
 }) {
-  await prisma.payment.create({
-    data: {
-      clientId: data.clientId,
-      projectId: data.projectId,
-      totalPayment: data.totalPayment,
-      advancePayment: data.advancePayment,
-      amountPaid: data.advancePayment,
-      expenses: data.expenses,
-      employeeSalary: data.employeeSalary ?? 0,
-      status: data.advancePayment >= data.totalPayment ? "PAID" : data.advancePayment > 0 ? "PARTIAL" : "PENDING",
-      history: data.advancePayment > 0 ? {
-        create: { amount: data.advancePayment, note: "Advance payment", paidAt: new Date() }
-      } : undefined,
-    },
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const createData: any = {
+    clientId: data.clientId,
+    projectId: data.projectId,
+    totalPayment: data.totalPayment,
+    advancePayment: data.advancePayment,
+    amountPaid: data.advancePayment,
+    expenses: data.expenses,
+    employeeSalary: data.employeeSalary ?? 0,
+    status: data.advancePayment >= data.totalPayment ? "PAID" : data.advancePayment > 0 ? "PARTIAL" : "PENDING",
+    history: data.advancePayment > 0 ? {
+      create: { amount: data.advancePayment, note: "Advance payment", paidAt: new Date() }
+    } : undefined,
+  };
+
+  const payment = await prisma.payment.create({
+    data: createData,
   });
   revalidatePath("/");
 }
