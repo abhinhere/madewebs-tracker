@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
-export function WebsiteLinkStep({ project, handleUpdate }: { project: any; handleUpdate: (data: any) => void }) {
+export function WebsiteLinkStep({ project, handleUpdate, syncData }: { project: any; handleUpdate: (data: any) => void; syncData?: (data: any) => void; }) {
   const [websiteUrl, setWebsiteUrl] = useState(project.websiteUrl || "");
   const [renewalDate, setRenewalDate] = useState(
     project.renewalDate ? new Date(project.renewalDate).toISOString().split('T')[0] : ""
@@ -24,7 +24,10 @@ export function WebsiteLinkStep({ project, handleUpdate }: { project: any; handl
         <Label>Live Website URL</Label>
         <Input 
           value={websiteUrl} 
-          onChange={(e) => setWebsiteUrl(e.target.value)} 
+          onChange={(e) => {
+            setWebsiteUrl(e.target.value);
+            if (syncData) syncData({ websiteUrl: e.target.value });
+          }} 
           onBlur={save}
           placeholder="https://..."
         />
@@ -35,7 +38,10 @@ export function WebsiteLinkStep({ project, handleUpdate }: { project: any; handl
         <Input 
           type="date" 
           value={renewalDate} 
-          onChange={(e) => setRenewalDate(e.target.value)} 
+          onChange={(e) => {
+            setRenewalDate(e.target.value);
+            if (syncData) syncData({ renewalDate: e.target.value || null });
+          }} 
           onBlur={save}
         />
         <p className="text-xs text-muted-foreground pt-2">

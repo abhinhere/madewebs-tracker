@@ -76,3 +76,60 @@ export async function sendApprovalEmail(projectId: string, message: string) {
     return { success: false, error: error.message };
   }
 }
+
+export async function sendEmployeeNotificationEmail(projectId: string, changes: string) {
+  try {
+    const project = await prisma.project.findUnique({
+      where: { id: projectId },
+      include: {
+        assignedEmployee: true,
+      },
+    });
+
+    if (!project) throw new Error("Project not found");
+    if (!project.assignedEmployee || !project.assignedEmployee.email) {
+      throw new Error("No employee assigned or employee has no email");
+    }
+
+    const transporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST || "smtp.example.com",
+      port: Number(process.env.SMTP_PORT) || 587,
+      secure: Number(process.env.SMTP_PORT) === 465, 
+      auth: {
+        user: process.env.SMTP_USER || "test@example.com",
+        pass: process.env.SMTP_PASS || "password",
+      },
+    });
+
+    const mailOptions = {
+      from: `"MadeWebs Tracker" <${process.env.SMTP_USER || "noreply@madewebs.com"}>`,
+      to: project.assignedEmployee.email,
+      subject: `Client Changes Requested: ${project.name}`,
+      html: `
+        <h2>Client Feedback / Changes Requested</h2>
+        <p><strong>Project:</strong> ${project.name}</p>
+        <p>The client has requested the following changes:</p>
+        <blockquote style="border-left: 4px solid #ccc; padding-left: 10px; white-space: pre-wrap;">${changes || "No changes specified."}</blockquote>
+        <br/>
+        <p>Please review these changes in your dashboard.</p>
+      `,
+    };
+
+    if (!process.env.SMTP_HOST) {
+      console.log("No SMTP credentials found. Simulating email sending...");
+      console.log("================ MOCK EMAIL ================");
+      console.log(`To: ${project.assignedEmployee.email}`);
+      console.log(`Subject: ${mailOptions.subject}`);
+      console.log(`Body:\n${mailOptions.html}`);
+      console.log("============================================");
+    } else {
+      await transporter.sendMail(mailOptions);
+      console.log(`Email sent to: ${project.assignedEmployee.email}`);
+    }
+
+    return { success: true };
+  } catch (error: any) {
+    console.error("Error sending employee notification email:", error);
+    return { success: false, error: error.message };
+  }
+}

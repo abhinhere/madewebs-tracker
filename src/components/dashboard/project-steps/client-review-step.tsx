@@ -6,7 +6,7 @@ import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 
-export function ClientReviewStep({ project, handleUpdate, role = "ADMIN" }: { project: any; handleUpdate: (data: any) => void; role?: string; }) {
+export function ClientReviewStep({ project, handleUpdate, role = "ADMIN", syncData }: { project: any; handleUpdate: (data: any) => void; role?: string; syncData?: (data: any) => void; }) {
   const [clientApproved, setClientApproved] = useState(project.clientApproved || false);
   const [clientChanges, setClientChanges] = useState(project.clientChanges || "");
 
@@ -49,19 +49,48 @@ export function ClientReviewStep({ project, handleUpdate, role = "ADMIN" }: { pr
         <Label>Client Feedback / Requested Changes</Label>
         <Textarea 
           value={clientChanges} 
-          onChange={(e) => setClientChanges(e.target.value)} 
+          onChange={(e) => {
+            setClientChanges(e.target.value);
+            if (syncData) syncData({ clientChanges: e.target.value });
+          }} 
           onBlur={saveChanges}
           placeholder="Enter changes requested by the client..."
           rows={4}
           readOnly={role === "EMPLOYEE"}
         />
-        {role !== "EMPLOYEE" && (
-          <div className="flex items-center justify-between pt-2">
+        {role !== "EMPLOYEE" ? (
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between pt-2 gap-3">
             <p className="text-xs text-muted-foreground">If changes are suggested, assign them to the employee.</p>
-            <Button variant="secondary" size="sm" onClick={handleShareEmployee} disabled={!clientChanges.trim()}>
-              Share to Employee (WhatsApp)
-            </Button>
+            <div className="flex gap-2">
+              <Button variant="secondary" size="sm" onClick={handleShareEmployee} disabled={!clientChanges.trim()}>
+                Share to Employee (WhatsApp)
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={async () => {
+                  const { sendEmployeeNotificationEmail } = await import('@/lib/actions/email-actions');
+                  const res = await sendEmployeeNotificationEmail(project.id, clientChanges);
+                  if (res.success) {
+                    alert("Email sent to employee successfully");
+                  } else {
+                    alert("Failed to send email");
+                  }
+                }} 
+                disabled={!clientChanges.trim()}
+              >
+                Notify via Email
+              </Button>
+            </div>
           </div>
+        ) : (
+          project.clientApproved && (
+            <div className="pt-4">
+              <span className="inline-flex items-center rounded-md bg-emerald-50 px-2.5 py-1.5 text-sm font-medium text-emerald-700 ring-1 ring-inset ring-emerald-600/20">
+                Client Approved!
+              </span>
+            </div>
+          )
         )}
       </div>
 

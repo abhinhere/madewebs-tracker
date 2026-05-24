@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 
-export function AdvancePaymentStep({ project, handleUpdate, role = "ADMIN" }: { project: any; handleUpdate: (data: any) => void; role?: string; }) {
+export function AdvancePaymentStep({ project, handleUpdate, role = "ADMIN", syncData }: { project: any; handleUpdate: (data: any) => void; role?: string; syncData?: (data: any) => void; }) {
   const defaultAdvance = project.totalAmount ? (Number(project.totalAmount) * 0.2) : 0;
   
   const [data, setData] = useState({
@@ -13,7 +13,9 @@ export function AdvancePaymentStep({ project, handleUpdate, role = "ADMIN" }: { 
   });
 
   const handleChange = (e: any) => {
-    setData({ ...data, [e.target.name]: Number(e.target.value) });
+    const newData = { ...data, [e.target.name]: Number(e.target.value) };
+    setData(newData);
+    if (syncData) syncData(newData);
   };
 
   const save = () => {

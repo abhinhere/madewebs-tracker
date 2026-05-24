@@ -78,12 +78,6 @@ export function EmployeeDashboard({ projects, employeeName }: Props) {
     });
   }
 
-  function setProgressPercent(projectId: string, percent: number) {
-    startTransition(async () => {
-      await updateProject(projectId, { taskCompletion: percent });
-    });
-  }
-
   return (
     <div className="space-y-6">
       {/* Employee Greeting Header */}
@@ -210,19 +204,6 @@ export function EmployeeDashboard({ projects, employeeName }: Props) {
                     <span className="font-bold text-foreground">{project.taskCompletion}%</span>
                   </div>
                   <Progress value={project.taskCompletion} />
-                  <div className="flex gap-1.5 mt-2 overflow-x-auto pb-1">
-                    {[0, 25, 50, 75, 100].map((pct) => (
-                      <button
-                        key={pct}
-                        onClick={() => setProgressPercent(project.id, pct)}
-                        className={`text-[10px] px-2 py-0.5 rounded border border-border transition-colors shrink-0 ${
-                          project.taskCompletion === pct ? "bg-foreground text-background" : "bg-muted/30 hover:bg-accent text-muted-foreground"
-                        }`}
-                      >
-                        {pct}%
-                      </button>
-                    ))}
-                  </div>
                 </div>
 
                 {/* Workflow actions / Status advancement */}
@@ -238,7 +219,7 @@ export function EmployeeDashboard({ projects, employeeName }: Props) {
                             Open Project Tracker
                           </Button>
                           <Dialog open={openTrackerId === project.id} onClose={() => setOpenTrackerId(null)} className="max-w-4xl">
-                            <ProjectTracker initialProject={project} role="EMPLOYEE" />
+                            <ProjectTracker initialProject={project} role="EMPLOYEE" onClose={() => setOpenTrackerId(null)} />
                           </Dialog>
                         </>
                       )}

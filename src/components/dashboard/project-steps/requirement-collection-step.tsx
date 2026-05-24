@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Select } from "@/components/ui/select";
 
-export function RequirementCollectionStep({ project, handleUpdate, role = "ADMIN" }: { project: any; handleUpdate: (data: any) => void; role?: string; }) {
+export function RequirementCollectionStep({ project, handleUpdate, role = "ADMIN", syncData }: { project: any; handleUpdate: (data: any) => void; role?: string; syncData?: (data: any) => void; }) {
   const [data, setData] = useState({
     businessName: project.businessName || "",
     logoUrl: project.logoUrl || "",
@@ -22,7 +22,12 @@ export function RequirementCollectionStep({ project, handleUpdate, role = "ADMIN
   });
 
   const handleChange = (e: any) => {
-    setData({ ...data, [e.target.name]: e.target.value });
+    const newData = { ...data, [e.target.name]: e.target.value };
+    setData(newData);
+    if (syncData) {
+      const numAmount = Number(newData.totalAmount);
+      syncData({ ...newData, totalAmount: numAmount, totalPayment: numAmount });
+    }
   };
 
   const save = () => {
