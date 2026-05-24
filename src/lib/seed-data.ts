@@ -1,6 +1,6 @@
 export type Role = "Admin" | "Manager" | "Employee";
 export type WorkType = "Website" | "Logo" | "Poster" | "Branding" | "Web App" | "SEO" | "Maintenance";
-export type ProjectStatus = "New" | "Planning" | "Designing" | "Development" | "Review" | "Revision" | "Completed" | "Delivered";
+export type ProjectStatus = "New" | "Planning" | "Repo" | "Designing" | "Developing" | "Development" | "Pushed" | "Deployed" | "Review" | "Final changes" | "Domain connection" | "Revision" | "Tested" | "Completed" | "Delivered";
 export type Priority = "Low" | "Medium" | "High" | "Urgent";
 export type ReviewStatus = "Pending review" | "Client reviewing" | "Approved" | "Changes requested";
 export type PaymentStatus = "Paid" | "Partial" | "Pending" | "Overdue";
@@ -256,4 +256,4 @@ export const revenueSeries = [
   { month: "Jun", revenue: 311000, profit: 217000 },
 ];
 
-export const statusColumns: ProjectStatus[] = ["New", "Planning", "Designing", "Development", "Review", "Revision", "Completed", "Delivered"];
+export const statusColumns: ProjectStatus[] = ["New", "Planning", "Repo", "Designing", "Developing", "Development", "Pushed", "Deployed", "Review", "Final changes", "Domain connection", "Revision", "Tested", "Completed", "Delivered"];

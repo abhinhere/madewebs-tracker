@@ -10,13 +10,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { TeamMemberModal } from "@/components/modals/team-member-modal";
 import { deleteTeamMember } from "@/lib/actions/team-actions";
-import type { User, Project } from "@prisma/client";
+import type { User } from "@prisma/client";
 import { labelRole } from "@/types/db";
+import type { ProjectWithRelations } from "@/types/db";
 import { initials } from "@/lib/utils";
 
 interface Props {
   members: User[];
-  projects: Project[];
+  projects: ProjectWithRelations[];
 }
 
 export function TeamClient({ members, projects }: Props) {

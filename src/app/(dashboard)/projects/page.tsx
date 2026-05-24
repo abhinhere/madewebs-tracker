@@ -18,11 +18,14 @@ export default async function ProjectsPage() {
     redirect("/");
   }
 
-  const [projects, clients, teamMembers] = await Promise.all([
+  const [projectsData, clientsData, teamMembers] = await Promise.all([
     getProjects(),
     getClients(),
     getTeamMembers(),
   ]);
+
+  const projects = JSON.parse(JSON.stringify(projectsData));
+  const clients = JSON.parse(JSON.stringify(clientsData));
 
   return <ProjectsClient projects={projects} clients={clients} teamMembers={teamMembers} />;
 }

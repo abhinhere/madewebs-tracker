@@ -14,42 +14,12 @@ import {
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { cn, formatCurrency, initials } from "@/lib/utils";
+import { cn, formatCurrency, initials, statusBadge } from "@/lib/utils";
 import type { ProjectWithRelations, PaymentWithRelations } from "@/types/db";
 import type { Client } from "@prisma/client";
-import {
-  labelPriority,
-  labelPaymentStatus,
-} from "@/types/db";
+import { labelPriority, labelPaymentStatus } from "@/types/db";
 
 const today = new Date();
-
-export function statusBadge(status: string) {
-  const map: Record<string, "muted" | "success" | "warning" | "danger" | "info"> = {
-    New: "info",
-    Planning: "muted",
-    Designing: "warning",
-    Development: "info",
-    Review: "warning",
-    Revision: "danger",
-    Completed: "success",
-    Delivered: "success",
-    "Pending review": "warning",
-    "Client reviewing": "info",
-    Approved: "success",
-    "Changes requested": "danger",
-    Paid: "success",
-    Partial: "warning",
-    Pending: "muted",
-    Overdue: "danger",
-    Low: "muted",
-    Medium: "info",
-    High: "warning",
-    Urgent: "danger",
-  };
-
-  return map[status] ?? "muted";
-}
 
 interface DashboardOverviewProps {
   projects: ProjectWithRelations[];

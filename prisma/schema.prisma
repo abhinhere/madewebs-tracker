@@ -26,10 +26,17 @@ enum WorkType {
 enum ProjectStatus {
   NEW
   PLANNING
+  REPO
   DESIGNING
+  DEVELOPING
   DEVELOPMENT
+  PUSHED
+  DEPLOYED
   REVIEW
+  FINAL_CHANGES
+  DOMAIN_CONNECTION
   REVISION
+  TESTED
   COMPLETED
   DELIVERED
 }
@@ -44,6 +51,7 @@ enum Priority {
 enum ReviewStatus {
   PENDING_REVIEW
   CLIENT_REVIEWING
+  CLIENT_APPROVED
   APPROVED
   CHANGES_REQUESTED
 }
@@ -150,7 +158,51 @@ model Project {
   taskCompletion          Int           @default(0)
   archived                Boolean       @default(false)
   websiteUrl              String?
+  deployedUrl             String?
   renewalDate             DateTime?
+  
+  // 10-Step Tracker Fields
+  currentStep             Int           @default(1)
+  
+  // Step 2: Requirement Collection
+  businessName            String?
+  logoUrl                 String?
+  contactNumber           String?
+  contactEmail            String?
+  socialLinks             Json?
+  location                String?
+  packageType             String?
+  domainNeed              Boolean       @default(false)
+  totalAmount             Decimal       @db.Decimal(12, 2) @default(0)
+  
+  // Step 3: Advance Payment
+  advanceAmount           Decimal       @db.Decimal(12, 2) @default(0)
+  domainCharge            Decimal       @db.Decimal(12, 2) @default(0)
+  
+  // Step 4: Setup
+  setupChecklist          Json?
+  
+  // Step 5: Testing
+  testingChecklist        Json?
+  
+  // Step 6: Client Review
+  clientChanges           String?       @db.Text
+  clientApproved          Boolean       @default(false)
+  
+  // Step 7: Final Payment
+  finalPaymentAmount      Decimal       @db.Decimal(12, 2) @default(0)
+  finalPaymentMode        String?
+  
+  // Step 8: Connect Domain
+  domainChecklist         Json?
+  
+  // Step 9: Renewal (handled by websiteUrl and renewalDate above)
+  
+  // Step 10 & 11: Social Posts & Admin
+  socialPostsChecklist    Json?
+  adminApproval           Boolean       @default(false)
+
+  // Relations
   attachments             Attachment[]
   client                  Client        @relation(fields: [clientId], references: [id], onDelete: Cascade)
   assignedEmployee        User          @relation("AssignedProjects", fields: [assignedEmployeeId], references: [id])
@@ -182,6 +234,7 @@ model Payment {
   totalPayment   Decimal  @db.Decimal(12, 2)
   expenses       Decimal  @default(0) @db.Decimal(12, 2)
   employeeSalary Decimal  @default(0) @db.Decimal(12, 2)
+  employeeSalaryPaid Boolean @default(false)
   amountPaid     Decimal  @default(0) @db.Decimal(12, 2)
   status         PaymentStatus @default(PENDING)
   paidAt         DateTime?

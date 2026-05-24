@@ -17,10 +17,12 @@ export default async function TeamPage() {
     redirect("/");
   }
 
-  const [members, projects] = await Promise.all([
+  const [members, projectsData] = await Promise.all([
     getTeamMembers(),
     getProjects(),
   ]);
+
+  const projects = JSON.parse(JSON.stringify(projectsData));
 
   return <TeamClient members={members} projects={projects} />;
 }

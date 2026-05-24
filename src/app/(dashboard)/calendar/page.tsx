@@ -13,21 +13,23 @@ export default async function CalendarPage() {
   const role = session.user.role;
   const isAdmin = role === "ADMIN" || role === "MANAGER";
 
-  let projects = await getProjects();
+  let projectsData = await getProjects();
   if (!isAdmin) {
     // Filter to only show projects assigned to the logged-in employee
-    projects = projects.filter((p) => p.assignedEmployeeId === session.user.id);
+    projectsData = projectsData.filter((p: any) => p.assignedEmployeeId === session.user.id);
   }
+
+  const projects = JSON.parse(JSON.stringify(projectsData));
 
   const today = new Date();
 
   const upcoming = projects
-    .map((p) => ({
+    .map((p: any) => ({
       ...p,
       isOverdue: new Date(p.deadline) < today && !["COMPLETED", "DELIVERED"].includes(p.status),
     }))
-    .filter((project) => new Date(project.deadline) >= today || project.isOverdue)
-    .sort((a, b) => new Date(a.deadline).getTime() - new Date(b.deadline).getTime());
+    .filter((project: any) => new Date(project.deadline) >= today || project.isOverdue)
+    .sort((a: any, b: any) => new Date(a.deadline).getTime() - new Date(b.deadline).getTime());
 
   return (
     <div className="space-y-6">

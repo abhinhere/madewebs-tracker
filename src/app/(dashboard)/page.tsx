@@ -16,15 +16,21 @@ export default async function Home() {
   const role = session.user.role;
   const isAdmin = role === "ADMIN" || role === "MANAGER";
 
-  const [projects, clients, payments] = await Promise.all([
+  const [projectsData, clientsData, paymentsData] = await Promise.all([
     getProjects(),
     getClientsWithActiveProjects(),
     getPayments(),
   ]);
 
+  // Convert Prisma Decimals and Dates to plain JS objects/strings
+  // to avoid Next.js "Only plain objects can be passed to Client Components" error
+  const projects = JSON.parse(JSON.stringify(projectsData));
+  const clients = JSON.parse(JSON.stringify(clientsData));
+  const payments = JSON.parse(JSON.stringify(paymentsData));
+
   if (!isAdmin) {
     // Filter projects to only show tasks assigned to this logged-in employee
-    const myProjects = projects.filter((p) => p.assignedEmployeeId === session.user.id);
+    const myProjects = projects.filter((p: any) => p.assignedEmployeeId === session.user.id);
     return (
       <EmployeeDashboard
         projects={myProjects}

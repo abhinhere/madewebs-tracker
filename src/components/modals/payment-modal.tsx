@@ -16,6 +16,7 @@ type PaymentWithHistory = Omit<Payment, "totalPayment" | "advancePayment" | "amo
   amountPaid: number;
   expenses: number;
   employeeSalary?: number;
+  employeeSalaryPaid?: boolean;
   history: (Omit<PaymentHistory, "amount"> & { amount: number })[];
 };
 
@@ -32,11 +33,13 @@ export function PaymentModal({ open, onClose, payment, projectName }: Props) {
   const [expenses, setExpenses] = useState("");
   const [employeeSalary, setEmployeeSalary] = useState("");
   const [totalPayment, setTotalPayment] = useState("");
+  const [employeeSalaryPaid, setEmployeeSalaryPaid] = useState(false);
   const [isPending, startTransition] = useTransition();
 
   useEffect(() => {
     setExpenses(String(payment?.expenses ?? ""));
     setEmployeeSalary(payment?.employeeSalary ? String(payment.employeeSalary) : "");
+    setEmployeeSalaryPaid(Boolean(payment?.employeeSalaryPaid));
     setTotalPayment(String(payment?.totalPayment ?? ""));
     setAmount("");
     setNote("");
@@ -58,6 +61,7 @@ export function PaymentModal({ open, onClose, payment, projectName }: Props) {
         totalPayment: Number(totalPayment),
         expenses: Number(expenses),
         employeeSalary: Number(employeeSalary),
+        employeeSalaryPaid,
       });
       onClose();
     });
@@ -113,6 +117,16 @@ export function PaymentModal({ open, onClose, payment, projectName }: Props) {
               <Label htmlFor="pay-salary" className="whitespace-nowrap">Salary (₹)</Label>
               <Input id="pay-salary" type="number" value={employeeSalary} onChange={(e) => setEmployeeSalary(e.target.value)} placeholder={totalPayment ? `75% = ${Math.round(Number(totalPayment) * 0.75)}` : ""} />
             </div>
+          </div>
+          <div className="flex items-center gap-2 pt-1 pb-1">
+            <input 
+              id="pay-salary-paid" 
+              type="checkbox" 
+              checked={employeeSalaryPaid} 
+              onChange={(e) => setEmployeeSalaryPaid(e.target.checked)}
+              className="h-4 w-4 rounded border-border text-primary focus:ring-primary cursor-pointer accent-primary"
+            />
+            <Label htmlFor="pay-salary-paid" className="font-medium cursor-pointer text-sm">Salary has been paid to employee</Label>
           </div>
           <Button variant="outline" onClick={handleUpdateFinancials} disabled={isPending} className="w-full">
             {isPending ? "Saving…" : "Update financials"}

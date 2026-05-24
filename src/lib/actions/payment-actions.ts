@@ -20,15 +20,24 @@ export async function getPayments() {
     expenses: Number(p.expenses),
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     employeeSalary: Number((p as any).employeeSalary),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    employeeSalaryPaid: Boolean((p as any).employeeSalaryPaid),
     history: p.history.map((h) => ({
       ...h,
       amount: Number(h.amount),
     })),
+    project: p.project ? {
+      ...p.project,
+      totalAmount: Number(p.project.totalAmount),
+      advanceAmount: Number(p.project.advanceAmount),
+      domainCharge: Number(p.project.domainCharge),
+      finalPaymentAmount: Number(p.project.finalPaymentAmount),
+    } : null,
   }));
 }
 
 export async function updatePaymentFinancials(id: string, data: {
-  totalPayment?: number; expenses?: number; employeeSalary?: number;
+  totalPayment?: number; expenses?: number; employeeSalary?: number; employeeSalaryPaid?: boolean;
 }) {
   await prisma.payment.update({
     where: { id },
@@ -36,6 +45,7 @@ export async function updatePaymentFinancials(id: string, data: {
       ...(data.totalPayment !== undefined && { totalPayment: data.totalPayment }),
       ...(data.expenses !== undefined && { expenses: data.expenses }),
       ...(data.employeeSalary !== undefined && { employeeSalary: data.employeeSalary }),
+      ...(data.employeeSalaryPaid !== undefined && { employeeSalaryPaid: data.employeeSalaryPaid }),
     },
   });
   revalidatePath("/");

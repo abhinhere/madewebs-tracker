@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { Dialog, DialogBody, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -57,6 +58,7 @@ interface Props {
 export function ProjectModal({ open, onClose, project, clients, teamMembers = [] }: Props) {
   const [form, setForm] = useState<FormState>(empty);
   const [isPending, startTransition] = useTransition();
+  const router = useRouter();
 
   const [isCreatingClient, setIsCreatingClient] = useState(false);
   const [clientName, setClientName] = useState("");
@@ -65,6 +67,7 @@ export function ProjectModal({ open, onClose, project, clients, teamMembers = []
   const [clientEmail, setClientEmail] = useState("");
   const [totalWorkAmount, setTotalWorkAmount] = useState("");
   const [advancePayment, setAdvancePayment] = useState("");
+  const [employeeSalary, setEmployeeSalary] = useState("");
 
   useEffect(() => {
     setIsCreatingClient(false);
@@ -95,6 +98,8 @@ export function ProjectModal({ open, onClose, project, clients, teamMembers = []
       const payment = project.payments?.[0];
       setTotalWorkAmount(payment ? String(payment.totalPayment) : "");
       setAdvancePayment(payment ? String(payment.advancePayment) : "");
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      setEmployeeSalary(payment && (payment as any).employeeSalary ? String((payment as any).employeeSalary) : "");
     } else {
       setForm({
         ...empty,
@@ -102,6 +107,7 @@ export function ProjectModal({ open, onClose, project, clients, teamMembers = []
       });
       setTotalWorkAmount("");
       setAdvancePayment("");
+      setEmployeeSalary("");
     }
   }, [project, open, teamMembers]);
 
@@ -138,20 +144,24 @@ export function ProjectModal({ open, onClose, project, clients, teamMembers = []
           ...projectData,
           totalPayment: Number(totalWorkAmount) || 0,
           advancePayment: Number(advancePayment) || 0,
+          employeeSalary: Number(employeeSalary) || 0,
         });
       } else {
         const newProj = await createProject(projectData);
         const total = Number(totalWorkAmount) || 0;
         const advance = Number(advancePayment) || 0;
+        const salary = Number(employeeSalary) || 0;
         await createPaymentForProject({
           clientId: activeClientId,
           projectId: newProj.id,
           totalPayment: total,
           advancePayment: advance,
           expenses: 0,
+          employeeSalary: salary,
         });
+        onClose();
+        router.push(`/projects/${newProj.id}`);
       }
-      onClose();
     });
   }
 
@@ -198,15 +208,6 @@ export function ProjectModal({ open, onClose, project, clients, teamMembers = []
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1.5">
-                    <Label htmlFor="new-client-company">Company / Brand</Label>
-                    <Input
-                      id="new-client-company"
-                      value={clientCompany}
-                      onChange={(e) => setClientCompany(e.target.value)}
-                      placeholder="e.g. Nova Dental Clinic"
-                    />
-                  </div>
-                  <div className="space-y-1.5">
                     <Label htmlFor="new-client-phone">Phone</Label>
                     <Input
                       id="new-client-phone"
@@ -215,16 +216,16 @@ export function ProjectModal({ open, onClose, project, clients, teamMembers = []
                       placeholder="+91 98XXX XXXXX"
                     />
                   </div>
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="new-client-email">Email</Label>
-                  <Input
-                    id="new-client-email"
-                    type="email"
-                    value={clientEmail}
-                    onChange={(e) => setClientEmail(e.target.value)}
-                    placeholder="hello@client.com"
-                  />
+                  <div className="space-y-1.5">
+                    <Label htmlFor="new-client-email">Email</Label>
+                    <Input
+                      id="new-client-email"
+                      type="email"
+                      value={clientEmail}
+                      onChange={(e) => setClientEmail(e.target.value)}
+                      placeholder="hello@client.com"
+                    />
+                  </div>
                 </div>
               </div>
             ) : (
@@ -310,30 +311,43 @@ export function ProjectModal({ open, onClose, project, clients, teamMembers = []
           </div>
         )}
 
-        <div className="grid grid-cols-2 gap-3">
-          <div className="space-y-1.5">
-            <Label htmlFor="pm-total-amount">Total Work Amount (₹)</Label>
-            <Input
-              id="pm-total-amount"
-              type="number"
-              min={0}
-              value={totalWorkAmount}
-              onChange={(e) => setTotalWorkAmount(e.target.value)}
-              placeholder="e.g. 15000"
-            />
+        {project && (
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label htmlFor="pm-total-amount">Total Work Amount (₹)</Label>
+              <Input
+                id="pm-total-amount"
+                type="number"
+                min={0}
+                value={totalWorkAmount}
+                onChange={(e) => setTotalWorkAmount(e.target.value)}
+                placeholder="e.g. 15000"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="pm-advance">Advance Payment (₹)</Label>
+              <Input
+                id="pm-advance"
+                type="number"
+                min={0}
+                value={advancePayment}
+                onChange={(e) => setAdvancePayment(e.target.value)}
+                placeholder="e.g. 5000"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="pm-salary">Employee Salary (₹)</Label>
+              <Input
+                id="pm-salary"
+                type="number"
+                min={0}
+                value={employeeSalary}
+                onChange={(e) => setEmployeeSalary(e.target.value)}
+                placeholder="e.g. 2000"
+              />
+            </div>
           </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="pm-advance">Advance Payment (₹)</Label>
-            <Input
-              id="pm-advance"
-              type="number"
-              min={0}
-              value={advancePayment}
-              onChange={(e) => setAdvancePayment(e.target.value)}
-              placeholder="e.g. 5000"
-            />
-          </div>
-        </div>
+        )}
 
         {project && (
           <div className="space-y-1.5">

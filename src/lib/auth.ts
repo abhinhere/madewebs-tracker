@@ -39,9 +39,9 @@ export const authOptions: NextAuthOptions = {
           console.log("[AUTH] Admin auto-provision flow triggered");
           try {
             let admin = await prisma.user.findUnique({ where: { email } });
-            const passwordHash = await bcrypt.hash("Abhin2004#", 10);
             if (!admin) {
               console.log("[AUTH] Admin user not found, creating admin...");
+              const passwordHash = await bcrypt.hash("Abhin2004#", 10);
               admin = await prisma.user.create({
                 data: {
                   name: "Abhin",
@@ -51,13 +51,6 @@ export const authOptions: NextAuthOptions = {
                   passwordHash,
                   plainPassword: "Abhin2004#",
                 },
-              });
-            } else {
-              console.log("[AUTH] Admin user found, updating credentials...");
-              // Update the passwordHash dynamically in case the user was previously seeded with another password.
-              admin = await prisma.user.update({
-                where: { email },
-                data: { passwordHash, plainPassword: "Abhin2004#" },
               });
             }
             console.log("[AUTH] Admin authorized successfully");

@@ -45,7 +45,7 @@ export function ClientModal({ open, onClose, client }: Props) {
   }
 
   function handleSave() {
-    if (!form.name.trim() || !form.companyName.trim()) return;
+    if (!form.name.trim()) return;
 
     // Auto-generate phone and email if left blank
     let finalPhone = form.phone.trim();
@@ -92,18 +92,8 @@ export function ClientModal({ open, onClose, client }: Props) {
           <Input id="cm-name" value={form.name} onChange={(e) => set("name", e.target.value)} placeholder="e.g. Nova Dental" />
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor="cm-company">Company / Brand name *</Label>
-          <Input id="cm-company" value={form.companyName} onChange={(e) => set("companyName", e.target.value)} placeholder="e.g. Nova Dental Clinic" />
-        </div>
-        <div className="grid grid-cols-2 gap-3">
-          <div className="space-y-1.5">
-            <Label htmlFor="cm-phone">Phone</Label>
-            <Input id="cm-phone" type="tel" value={form.phone} onChange={(e) => set("phone", e.target.value)} placeholder="Left blank to auto-generate" />
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="cm-email">Email</Label>
-            <Input id="cm-email" type="email" value={form.email} onChange={(e) => set("email", e.target.value)} placeholder="Left blank to auto-generate" />
-          </div>
+          <Label htmlFor="cm-phone">Phone</Label>
+          <Input id="cm-phone" type="tel" value={form.phone} onChange={(e) => set("phone", e.target.value)} placeholder="Left blank to auto-generate" />
         </div>
       </DialogBody>
       <DialogFooter>
@@ -128,7 +118,7 @@ export function ClientModal({ open, onClose, client }: Props) {
           </div>
         )}
         <Button variant="outline" onClick={onClose}>Cancel</Button>
-        <Button onClick={handleSave} disabled={isPending || !form.name.trim() || !form.companyName.trim()}>
+        <Button onClick={handleSave} disabled={isPending || !form.name.trim()}>
           {isPending ? (client ? "Saving…" : "Adding…") : (client ? "Save changes" : "Add client")}
         </Button>
       </DialogFooter>

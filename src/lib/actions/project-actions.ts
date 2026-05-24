@@ -12,16 +12,28 @@ const workTypeMap: Record<string, WorkType> = {
   Branding: "BRANDING", "Web App": "WEB_APP", SEO: "SEO", Maintenance: "MAINTENANCE",
 };
 const statusMap: Record<string, ProjectStatus> = {
-  New: "NEW", Planning: "PLANNING", Designing: "DESIGNING",
-  Development: "DEVELOPMENT", Review: "REVIEW", Revision: "REVISION",
-  Completed: "COMPLETED", Delivered: "DELIVERED",
+  New: "NEW",
+  Planning: "PLANNING",
+  Repo: "REPO",
+  Designing: "DESIGNING",
+  Developing: "DEVELOPING",
+  Development: "DEVELOPMENT",
+  Pushed: "PUSHED",
+  Deployed: "DEPLOYED",
+  Review: "REVIEW",
+  "Final changes": "FINAL_CHANGES",
+  "Domain connection": "DOMAIN_CONNECTION",
+  Revision: "REVISION",
+  Tested: "TESTED",
+  Completed: "COMPLETED",
+  Delivered: "DELIVERED",
 };
 const priorityMap: Record<string, Priority> = {
   Low: "LOW", Medium: "MEDIUM", High: "HIGH", Urgent: "URGENT",
 };
 const reviewMap: Record<string, ReviewStatus> = {
   "Pending review": "PENDING_REVIEW", "Client reviewing": "CLIENT_REVIEWING",
-  Approved: "APPROVED", "Changes requested": "CHANGES_REQUESTED",
+  "Client approved": "CLIENT_APPROVED", Approved: "APPROVED", "Changes requested": "CHANGES_REQUESTED",
 };
 
 function toWorkType(v: string): WorkType { return workTypeMap[v] ?? "WEBSITE"; }
@@ -37,6 +49,10 @@ export async function getProjects() {
   });
   return list.map((p) => ({
     ...p,
+    totalAmount: Number(p.totalAmount),
+    advanceAmount: Number(p.advanceAmount),
+    domainCharge: Number(p.domainCharge),
+    finalPaymentAmount: Number(p.finalPaymentAmount),
     payments: p.payments.map((pay) => ({
       ...pay,
       totalPayment: Number(pay.totalPayment),
@@ -45,6 +61,8 @@ export async function getProjects() {
       expenses: Number(pay.expenses),
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       employeeSalary: Number((pay as any).employeeSalary),
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      employeeSalaryPaid: Boolean((pay as any).employeeSalaryPaid),
       history: pay.history.map((h) => ({
         ...h,
         amount: Number(h.amount),
@@ -54,11 +72,18 @@ export async function getProjects() {
 }
 
 export async function getArchivedProjects() {
-  return prisma.project.findMany({
+  const list = await prisma.project.findMany({
     where: { archived: true },
     include: { client: true, assignedEmployee: true },
     orderBy: { updatedAt: "desc" },
   });
+  return list.map((p) => ({
+    ...p,
+    totalAmount: Number(p.totalAmount),
+    advanceAmount: Number(p.advanceAmount),
+    domainCharge: Number(p.domainCharge),
+    finalPaymentAmount: Number(p.finalPaymentAmount),
+  }));
 }
 
 // ── Create ──────────────────────────────────────────────────────────────────
@@ -134,8 +159,33 @@ export async function updateProject(id: string, data: {
   clientId?: string;
   totalPayment?: number;
   advancePayment?: number;
+  employeeSalary?: number;
+  expenses?: number;
   websiteUrl?: string | null;
+  deployedUrl?: string | null;
   renewalDate?: string | null;
+  // New tracker fields
+  currentStep?: number;
+  businessName?: string | null;
+  logoUrl?: string | null;
+  contactNumber?: string | null;
+  contactEmail?: string | null;
+  socialLinks?: any;
+  location?: string | null;
+  packageType?: string | null;
+  domainNeed?: boolean;
+  totalAmount?: number;
+  advanceAmount?: number;
+  domainCharge?: number;
+  setupChecklist?: any;
+  testingChecklist?: any;
+  clientChanges?: string | null;
+  clientApproved?: boolean;
+  finalPaymentAmount?: number;
+  finalPaymentMode?: string | null;
+  domainChecklist?: any;
+  socialPostsChecklist?: any;
+  adminApproval?: boolean;
 }) {
   let employeeId = data.assignedEmployeeId;
   if (employeeId === "") {
@@ -163,11 +213,35 @@ export async function updateProject(id: string, data: {
       ...(employeeId && { assignedEmployeeId: employeeId }),
       ...(data.clientId && { clientId: data.clientId }),
       ...(data.websiteUrl !== undefined && { websiteUrl: data.websiteUrl }),
+      ...(data.deployedUrl !== undefined && { deployedUrl: data.deployedUrl }),
       ...(data.renewalDate !== undefined && { renewalDate: data.renewalDate ? new Date(data.renewalDate) : null }),
+      
+      // Tracker fields
+      ...(data.currentStep !== undefined && { currentStep: data.currentStep }),
+      ...(data.businessName !== undefined && { businessName: data.businessName }),
+      ...(data.logoUrl !== undefined && { logoUrl: data.logoUrl }),
+      ...(data.contactNumber !== undefined && { contactNumber: data.contactNumber }),
+      ...(data.contactEmail !== undefined && { contactEmail: data.contactEmail }),
+      ...(data.socialLinks !== undefined && { socialLinks: data.socialLinks }),
+      ...(data.location !== undefined && { location: data.location }),
+      ...(data.packageType !== undefined && { packageType: data.packageType }),
+      ...(data.domainNeed !== undefined && { domainNeed: data.domainNeed }),
+      ...(data.totalAmount !== undefined && { totalAmount: data.totalAmount }),
+      ...(data.advanceAmount !== undefined && { advanceAmount: data.advanceAmount }),
+      ...(data.domainCharge !== undefined && { domainCharge: data.domainCharge }),
+      ...(data.setupChecklist !== undefined && { setupChecklist: data.setupChecklist }),
+      ...(data.testingChecklist !== undefined && { testingChecklist: data.testingChecklist }),
+      ...(data.clientChanges !== undefined && { clientChanges: data.clientChanges }),
+      ...(data.clientApproved !== undefined && { clientApproved: data.clientApproved }),
+      ...(data.finalPaymentAmount !== undefined && { finalPaymentAmount: data.finalPaymentAmount }),
+      ...(data.finalPaymentMode !== undefined && { finalPaymentMode: data.finalPaymentMode }),
+      ...(data.domainChecklist !== undefined && { domainChecklist: data.domainChecklist }),
+      ...(data.socialPostsChecklist !== undefined && { socialPostsChecklist: data.socialPostsChecklist }),
+      ...(data.adminApproval !== undefined && { adminApproval: data.adminApproval }),
     },
   });
 
-  if (data.totalPayment !== undefined || data.advancePayment !== undefined) {
+  if (data.totalPayment !== undefined || data.advancePayment !== undefined || data.employeeSalary !== undefined || data.expenses !== undefined) {
     const payment = await prisma.payment.findFirst({
       where: { projectId: id },
       include: { history: true },
@@ -195,6 +269,8 @@ export async function updateProject(id: string, data: {
           advancePayment,
           amountPaid: newAmountPaid,
           status: newStatus,
+          ...(data.employeeSalary !== undefined && { employeeSalary: data.employeeSalary }),
+          ...(data.expenses !== undefined && { expenses: data.expenses }),
         },
       });
 

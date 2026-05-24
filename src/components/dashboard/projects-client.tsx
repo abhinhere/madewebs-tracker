@@ -24,8 +24,7 @@ import type { Client, User } from "@prisma/client";
 import {
   labelWorkType, labelReviewStatus,
 } from "@/types/db";
-import { cn, formatCurrency, formatDate } from "@/lib/utils";
-import { statusBadge } from "@/components/dashboard/agency-dashboard";
+import { cn, formatCurrency, formatDate, statusBadge } from "@/lib/utils";
 
 
 
@@ -49,8 +48,6 @@ export function ProjectsClient({ projects, clients, teamMembers }: Props) {
   const [editingWebsiteProject, setEditingWebsiteProject] = useState<ProjectWithRelations | null>(null);
   const [tempWebsiteUrl, setTempWebsiteUrl] = useState("");
   const [tempRenewalDate, setTempRenewalDate] = useState("");
-  const [editingProgressProject, setEditingProgressProject] = useState<ProjectWithRelations | null>(null);
-  const [tempProgress, setTempProgress] = useState<number>(0);
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -126,9 +123,6 @@ export function ProjectsClient({ projects, clients, teamMembers }: Props) {
           </div>
           {!showArchived && (
             <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto sm:justify-end">
-              <Button size="sm" variant="outline" className="flex-1 sm:flex-initial" onClick={() => setClientModalOpen(true)}>
-                <Plus className="h-4 w-4" />New client
-              </Button>
               <Button size="sm" className="flex-1 sm:flex-initial" onClick={openNew}>
                 <Plus className="h-4 w-4" />New project
               </Button>
@@ -141,23 +135,25 @@ export function ProjectsClient({ projects, clients, teamMembers }: Props) {
               <div className="col-span-full text-center text-muted-foreground py-8">No projects found</div>
             )}
             {filtered.map((p) => (
-              <div key={p.id} className={cn("flex flex-col rounded-xl border border-border bg-card shadow-sm transition-all hover:shadow-md", p.isOverdue && "border-red-200 bg-red-50/30 dark:border-red-900/50 dark:bg-red-950/10")}>
+              <div key={p.id} onClick={() => router.push(`/projects/${p.id}`)} className={cn("cursor-pointer flex flex-col rounded-xl border border-border bg-card shadow-sm transition-all hover:shadow-md", p.isOverdue && "border-red-200 bg-red-50/30 dark:border-red-900/50 dark:bg-red-950/10")}>
                 <div className="flex items-start justify-between p-4 border-b border-border/50">
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2 mb-1">
-                      <h3 className="font-semibold text-base truncate">{p.name}</h3>
+                      <a href={`/projects/${p.id}`} onClick={(e) => e.stopPropagation()} className="font-semibold text-base truncate hover:underline text-primary">
+                        {p.name}
+                      </a>
                       <span className="shrink-0 text-[10px] uppercase tracking-wider font-semibold text-muted-foreground bg-muted px-2 py-0.5 rounded-full">{labelWorkType(p.workType)}</span>
                     </div>
                     <button
                       type="button"
-                      onClick={() => setEditingClient(p.client)}
+                      onClick={(e) => { e.stopPropagation(); setEditingClient(p.client); }}
                       className="text-sm text-muted-foreground hover:text-foreground underline decoration-dotted underline-offset-2 hover:decoration-solid transition-colors text-left cursor-pointer truncate max-w-full block"
                     >
                       {p.client.name}
                     </button>
                   </div>
                   <div className="flex shrink-0 items-center gap-1 ml-2">
-                     <button onClick={() => handleDelete(p.id)} className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:bg-red-100 hover:text-red-600 dark:hover:bg-red-950 dark:hover:text-red-400" title="Delete">
+                     <button onClick={(e) => { e.stopPropagation(); handleDelete(p.id); }} className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:bg-red-100 hover:text-red-600 dark:hover:bg-red-950 dark:hover:text-red-400" title="Delete">
                       <Trash2 className="h-4 w-4" />
                     </button>
                   </div>
@@ -182,7 +178,7 @@ export function ProjectsClient({ projects, clients, teamMembers }: Props) {
                       <p className="text-xs text-muted-foreground mb-1">Review Status</p>
                       <button
                         type="button"
-                        onClick={() => setEditingReviewProject(p)}
+                        onClick={(e) => { e.stopPropagation(); setEditingReviewProject(p); }}
                         className="focus:outline-none cursor-pointer text-left block"
                       >
                         <Badge variant={statusBadge(labelReviewStatus(p.reviewStatus))} className="hover:opacity-80">
@@ -196,7 +192,8 @@ export function ProjectsClient({ projects, clients, teamMembers }: Props) {
                       {labelWorkType(p.workType) === "Website" ? (
                         <button
                           type="button"
-                          onClick={() => {
+                          onClick={(e) => {
+                            e.stopPropagation();
                             setEditingWebsiteProject(p);
                             setTempWebsiteUrl(p.websiteUrl ?? "");
                             setTempRenewalDate(p.renewalDate ? new Date(p.renewalDate).toISOString().slice(0, 10) : "");
@@ -222,17 +219,12 @@ export function ProjectsClient({ projects, clients, teamMembers }: Props) {
 
                   <div>
                      <p className="text-xs text-muted-foreground mb-1">Progress</p>
-                     <button
-                       type="button"
-                       onClick={() => {
-                         setEditingProgressProject(p);
-                         setTempProgress(p.taskCompletion);
-                       }}
-                       className="flex items-center gap-2 w-full hover:opacity-85 transition-opacity text-left cursor-pointer focus:outline-none"
+                     <div
+                       className="flex items-center gap-2 w-full text-left"
                      >
                        <Progress value={p.taskCompletion} className="h-1.5 flex-1" />
                        <span className="text-xs text-muted-foreground font-medium">{p.taskCompletion}%</span>
-                     </button>
+                     </div>
                   </div>
                 </div>
 
@@ -240,7 +232,7 @@ export function ProjectsClient({ projects, clients, teamMembers }: Props) {
                   <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Pending Payment</span>
                   <button
                     className="text-sm font-semibold hover:underline text-foreground"
-                    onClick={() => setPaymentProject(p)}
+                    onClick={(e) => { e.stopPropagation(); setPaymentProject(p); }}
                   >
                     {formatCurrency(p.pendingAmount)}
                   </button>
@@ -376,88 +368,6 @@ export function ProjectsClient({ projects, clients, teamMembers }: Props) {
         </DialogBody>
       </Dialog>
 
-      {/* Progress Edit Modal */}
-      <Dialog
-        open={!!editingProgressProject}
-        onClose={() => setEditingProgressProject(null)}
-        className="max-w-sm"
-      >
-        <DialogHeader onClose={() => setEditingProgressProject(null)}>
-          <DialogTitle>Update Progress</DialogTitle>
-          <DialogDescription>
-            {editingProgressProject ? `Adjust task completion for "${editingProgressProject.name}"` : ""}
-          </DialogDescription>
-        </DialogHeader>
-
-        <DialogBody className="space-y-6 py-6">
-          <div className="flex flex-col items-center justify-center gap-2">
-            <span className="text-4xl font-extrabold text-primary animate-in zoom-in-50 duration-200">
-              {tempProgress}%
-            </span>
-            <span className="text-xs text-muted-foreground font-medium uppercase tracking-wider">
-              Completion Rate
-            </span>
-          </div>
-
-          <div className="space-y-4">
-            <div className="flex items-center gap-4">
-              <span className="text-xs text-muted-foreground font-medium w-6 text-right">0%</span>
-              <input
-                type="range"
-                min="0"
-                max="100"
-                step="5"
-                value={tempProgress}
-                onChange={(e) => setTempProgress(Number(e.target.value))}
-                className="flex-1 h-2 rounded-lg bg-secondary appearance-none cursor-pointer accent-primary focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-              />
-              <span className="text-xs text-muted-foreground font-medium w-8">100%</span>
-            </div>
-
-            <div className="flex justify-center items-center gap-2">
-              <Label htmlFor="progress-number-input" className="text-xs text-muted-foreground">Or enter precise %:</Label>
-              <div className="relative w-20">
-                <Input
-                  id="progress-number-input"
-                  type="number"
-                  min="0"
-                  max="100"
-                  value={tempProgress}
-                  onChange={(e) => {
-                    let val = Number(e.target.value);
-                    if (val < 0) val = 0;
-                    if (val > 100) val = 100;
-                    setTempProgress(val);
-                  }}
-                  className="h-8 text-center font-semibold text-sm pr-6"
-                />
-                <span className="absolute right-2.5 top-1.5 text-xs text-muted-foreground font-semibold">%</span>
-              </div>
-            </div>
-          </div>
-        </DialogBody>
-
-        <DialogFooter>
-          <Button variant="outline" onClick={() => setEditingProgressProject(null)}>
-            Cancel
-          </Button>
-          <Button
-            disabled={isPending}
-            onClick={() => {
-              if (!editingProgressProject) return;
-              startTransition(async () => {
-                await updateProject(editingProgressProject.id, {
-                  taskCompletion: tempProgress,
-                });
-                setEditingProgressProject(null);
-                router.refresh();
-              });
-            }}
-          >
-            {isPending ? "Saving..." : "Save changes"}
-          </Button>
-        </DialogFooter>
-      </Dialog>
     </div>
   );
 }

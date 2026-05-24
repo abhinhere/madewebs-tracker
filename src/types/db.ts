@@ -5,7 +5,11 @@ import type {
   Project, Client, User, Payment, PaymentHistory,
 } from "@prisma/client";
 
-export type ProjectWithRelations = Project & {
+export type ProjectWithRelations = Omit<Project, "totalAmount" | "advanceAmount" | "domainCharge" | "finalPaymentAmount"> & {
+  totalAmount: number;
+  advanceAmount: number;
+  domainCharge: number;
+  finalPaymentAmount: number;
   client: Client;
   assignedEmployee: User;
   payments: (Omit<Payment, "totalPayment" | "advancePayment" | "amountPaid" | "expenses" | "employeeSalary"> & {
@@ -25,15 +29,22 @@ export type PaymentWithRelations = Omit<Payment, "totalPayment" | "advancePaymen
   expenses: number;
   employeeSalary?: number;
   history: (Omit<PaymentHistory, "amount"> & { amount: number })[];
-  project: Project | null;
+  project: (Omit<Project, "totalAmount" | "advanceAmount" | "domainCharge" | "finalPaymentAmount"> & {
+    totalAmount: number;
+    advanceAmount: number;
+    domainCharge: number;
+    finalPaymentAmount: number;
+  }) | null;
   client: Client;
 };
 
 // ── Enum → UI label converters ───────────────────────────────────────────────
 export function labelStatus(s: string) {
   const map: Record<string, string> = {
-    NEW: "New", PLANNING: "Planning", DESIGNING: "Designing",
-    DEVELOPMENT: "Development", REVIEW: "Review", REVISION: "Revision",
+    NEW: "New", PLANNING: "Planning", REPO: "Repo", DESIGNING: "Designing",
+    DEVELOPING: "Developing", DEVELOPMENT: "Development", PUSHED: "Pushed",
+    DEPLOYED: "Deployed", REVIEW: "Review", FINAL_CHANGES: "Final changes",
+    DOMAIN_CONNECTION: "Domain connection", REVISION: "Revision", TESTED: "Tested",
     COMPLETED: "Completed", DELIVERED: "Delivered",
   };
   return map[s] ?? s;
@@ -57,7 +68,7 @@ export function labelWorkType(s: string) {
 export function labelReviewStatus(s: string) {
   const map: Record<string, string> = {
     PENDING_REVIEW: "Pending review", CLIENT_REVIEWING: "Client reviewing",
-    APPROVED: "Approved", CHANGES_REQUESTED: "Changes requested",
+    CLIENT_APPROVED: "Client approved", APPROVED: "Approved", CHANGES_REQUESTED: "Changes requested",
   };
   return map[s] ?? s;
 }
