@@ -168,7 +168,7 @@ export function ProjectsClient({ projects, clients, teamMembers }: Props) {
                     <div>
                       <p className="text-xs text-muted-foreground mb-1">Deadline</p>
                       <p className={cn("font-medium", p.isOverdue && "text-red-600 dark:text-red-400")}>
-                        {formatDate(p.deadline.toISOString())}
+                        {formatDate(p.deadline)}
                       </p>
                     </div>
                   </div>

@@ -77,30 +77,32 @@ export function RequirementCollectionStep({ project, handleUpdate, role = "ADMIN
           <Label>Location</Label>
           <Input name="location" value={data.location} onChange={handleChange} onBlur={save} />
         </div>
-        <div className="space-y-2">
-          <Label>Package</Label>
-          <Select 
-            value={data.packageType} 
-            onChange={(e) => {
-              const value = e.target.value;
-              let amount = data.totalAmount;
-              if (value === "Basic") amount = 3999;
-              if (value === "Starter") amount = 5999;
-              if (value === "Professional") amount = 9999;
-              if (value === "Premium") amount = 15000;
-              
-              setData({ ...data, packageType: value, totalAmount: amount });
-              handleUpdate({ packageType: value, totalAmount: amount, totalPayment: amount });
-            }}
-          >
-            <option value="">Select a package...</option>
-            <option value="Basic">Basic: 3999/-</option>
-            <option value="Starter">Starter: 5999/-</option>
-            <option value="Professional">Professional: 9999/-</option>
-            <option value="Premium">Premium: 15000/-</option>
-            <option value="Custom">Custom</option>
-          </Select>
-        </div>
+        {role !== "EMPLOYEE" && (
+          <div className="space-y-2">
+            <Label>Package</Label>
+            <Select 
+              value={data.packageType} 
+              onChange={(e) => {
+                const value = e.target.value;
+                let amount = data.totalAmount;
+                if (value === "Basic") amount = 3999;
+                if (value === "Starter") amount = 5999;
+                if (value === "Professional") amount = 9999;
+                if (value === "Premium") amount = 15000;
+                
+                setData({ ...data, packageType: value, totalAmount: amount });
+                handleUpdate({ packageType: value, totalAmount: amount, totalPayment: amount });
+              }}
+            >
+              <option value="">Select a package...</option>
+              <option value="Basic">Basic: 3999/-</option>
+              <option value="Starter">Starter: 5999/-</option>
+              <option value="Professional">Professional: 9999/-</option>
+              <option value="Premium">Premium: 15000/-</option>
+              <option value="Custom">Custom</option>
+            </Select>
+          </div>
+        )}
       </div>
       
       <div className="flex items-center space-x-2 py-4">

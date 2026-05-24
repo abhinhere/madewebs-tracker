@@ -241,32 +241,51 @@ export async function updateProject(id: string, data: {
     },
   });
 
-  if (data.totalPayment !== undefined || data.advancePayment !== undefined || data.employeeSalary !== undefined || data.expenses !== undefined) {
+  // Sync payment record from tracker fields (advanceAmount, finalPaymentAmount, totalAmount)
+  const needsPaymentSync = (
+    data.totalPayment !== undefined ||
+    data.advancePayment !== undefined ||
+    data.employeeSalary !== undefined ||
+    data.expenses !== undefined ||
+    data.totalAmount !== undefined ||
+    data.advanceAmount !== undefined ||
+    data.finalPaymentAmount !== undefined
+  );
+
+  if (needsPaymentSync) {
     const payment = await prisma.payment.findFirst({
       where: { projectId: id },
       include: { history: true },
     });
 
     if (payment) {
-      const originalTotal = Number(payment.totalPayment);
-      const originalAdvance = Number(payment.advancePayment);
+      const currentTotal = Number(payment.totalPayment);
+      const currentAdvancePaid = Number(payment.advancePayment);
+      const currentAmountPaid = Number(payment.amountPaid);
 
-      const totalPayment = data.totalPayment !== undefined ? data.totalPayment : originalTotal;
-      const advancePayment = data.advancePayment !== undefined ? data.advancePayment : originalAdvance;
+      // Resolve new values — tracker fields take precedence
+      const newTotal = data.totalAmount ?? data.totalPayment ?? currentTotal;
+      const newAdvancePaid = data.advanceAmount ?? data.advancePayment ?? currentAdvancePaid;
 
-      const diffAdvance = advancePayment - originalAdvance;
-      const newAmountPaid = Number(payment.amountPaid) + diffAdvance;
+      // finalPaymentAmount from the Final Payment step
+      const project = await prisma.project.findUnique({ where: { id }, select: { finalPaymentAmount: true } });
+      const finalPaid = data.finalPaymentAmount !== undefined
+        ? Number(data.finalPaymentAmount)
+        : Number(project?.finalPaymentAmount ?? 0);
+
+      // Total paid = advance + final payment
+      const newAmountPaid = newAdvancePaid + finalPaid;
 
       const newStatus =
-        newAmountPaid >= totalPayment ? "PAID"
+        newAmountPaid >= newTotal ? "PAID"
         : newAmountPaid > 0 ? "PARTIAL"
         : "PENDING";
 
       await prisma.payment.update({
         where: { id: payment.id },
         data: {
-          totalPayment,
-          advancePayment,
+          totalPayment: newTotal,
+          advancePayment: newAdvancePaid,
           amountPaid: newAmountPaid,
           status: newStatus,
           ...(data.employeeSalary !== undefined && { employeeSalary: data.employeeSalary }),
@@ -274,23 +293,42 @@ export async function updateProject(id: string, data: {
         },
       });
 
+      // Keep payment history in sync for advance payment
       const advanceHistory = payment.history.find((h) => h.note === "Advance payment");
-      if (advanceHistory) {
+      if (advanceHistory && newAdvancePaid !== currentAdvancePaid) {
         await prisma.paymentHistory.update({
           where: { id: advanceHistory.id },
-          data: {
-            amount: advancePayment,
-          },
+          data: { amount: newAdvancePaid },
         });
-      } else if (advancePayment > 0) {
+      } else if (!advanceHistory && newAdvancePaid > 0) {
         await prisma.paymentHistory.create({
           data: {
             paymentId: payment.id,
-            amount: advancePayment,
+            amount: newAdvancePaid,
             note: "Advance payment",
             paidAt: new Date(),
           },
         });
+      }
+
+      // Keep payment history in sync for final payment
+      if (data.finalPaymentAmount !== undefined && finalPaid > 0) {
+        const finalHistory = payment.history.find((h) => h.note === "Final payment");
+        if (finalHistory) {
+          await prisma.paymentHistory.update({
+            where: { id: finalHistory.id },
+            data: { amount: finalPaid },
+          });
+        } else {
+          await prisma.paymentHistory.create({
+            data: {
+              paymentId: payment.id,
+              amount: finalPaid,
+              note: "Final payment",
+              paidAt: new Date(),
+            },
+          });
+        }
       }
     }
   }
