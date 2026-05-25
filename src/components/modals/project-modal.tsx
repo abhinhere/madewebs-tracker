@@ -16,7 +16,7 @@ import type { ProjectWithRelations } from "@/types/db";
 import { labelWorkType, labelStatus, labelPriority, labelReviewStatus } from "@/types/db";
 
 const WORK_TYPES = ["Website", "Logo", "Poster", "Branding", "Web App", "SEO", "Maintenance"];
-const REVIEW_STATUSES = ["Pending review", "Client reviewing", "Approved", "Changes requested"];
+const REVIEW_STATUSES = ["Pending review", "Client reviewing", "Tested", "Client approved", "Approved", "Changes requested"];
 
 type FormState = {
   clientId: string;

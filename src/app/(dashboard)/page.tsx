@@ -1,5 +1,4 @@
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/lib/auth";
+import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { getProjects } from "@/lib/actions/project-actions";
 import { getClientsWithActiveProjects } from "@/lib/actions/client-actions";
@@ -8,7 +7,7 @@ import { DashboardOverview } from "@/components/dashboard/agency-dashboard";
 import { EmployeeDashboard } from "@/components/dashboard/employee-dashboard";
 
 export default async function Home() {
-  const session = await getServerSession(authOptions);
+  const session = await auth();
   if (!session) {
     redirect("/login");
   }

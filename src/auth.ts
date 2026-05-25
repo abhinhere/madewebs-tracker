@@ -1,38 +1,35 @@
-import type { NextAuthOptions } from "next-auth";
-import CredentialsProvider from "next-auth/providers/credentials";
-import bcrypt from "bcryptjs";
+import NextAuth from "next-auth";
+import Credentials from "next-auth/providers/credentials";
+import Google from "next-auth/providers/google";
+import { PrismaAdapter } from "@auth/prisma-adapter";
 import { prisma } from "@/lib/prisma";
-import { PrismaAdapter } from "@next-auth/prisma-adapter";
-import GoogleProvider from "next-auth/providers/google";
+import bcrypt from "bcryptjs";
+import { authConfig } from "./auth.config";
 
-export const authOptions: NextAuthOptions = {
+export const { handlers, auth, signIn, signOut } = NextAuth({
+  ...authConfig,
   adapter: PrismaAdapter(prisma),
-  session: {
-    strategy: "jwt",
-  },
-  pages: {
-    signIn: "/login",
-  },
+  session: { strategy: "jwt" },
   providers: [
-    GoogleProvider({
+    Google({
       clientId: process.env.GOOGLE_CLIENT_ID || "",
       clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
       allowDangerousEmailAccountLinking: true,
     }),
-    CredentialsProvider({
+    Credentials({
       name: "MadeWebs login",
       credentials: {
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" },
       },
-       async authorize(credentials) {
+      async authorize(credentials) {
         console.log("[AUTH] Authorize called with email:", credentials?.email);
         if (!credentials?.email || !credentials.password) {
           console.log("[AUTH] Missing email or password");
           return null;
         }
 
-        const email = credentials.email.toLowerCase();
+        const email = String(credentials.email).toLowerCase();
 
         // 1. Auto-provision or authorize main admin
         if (email === "abhin@madewebs.local" && credentials.password === "Abhin2004#") {
@@ -80,7 +77,7 @@ export const authOptions: NextAuthOptions = {
           console.log("[AUTH] User found in DB:", user ? user.email : "none");
 
           if (user?.passwordHash) {
-            const match = await bcrypt.compare(credentials.password.trim(), user.passwordHash);
+            const match = await bcrypt.compare(String(credentials.password).trim(), user.passwordHash);
             console.log("[AUTH] Password match result:", match);
             if (match) {
               return {
@@ -102,27 +99,11 @@ export const authOptions: NextAuthOptions = {
       },
     }),
   ],
-  callbacks: {
-    jwt({ token, user }) {
-      if (user) {
-        token.role = (user as { role?: string }).role ?? "EMPLOYEE";
-      }
-      return token;
-    },
-    session({ session, token }) {
-      if (session.user) {
-        session.user.id = token.sub ?? "";
-        session.user.role = String(token.role ?? "EMPLOYEE");
-      }
-      return session;
-    },
-  },
-};
+});
 
 export function canAccess(role: string | undefined, allowed: string[]) {
   if (!role) {
     return false;
   }
-
   return allowed.includes(role.toUpperCase());
 }

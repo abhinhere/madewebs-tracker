@@ -7,7 +7,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { updateProject } from "@/lib/actions/project-actions";
-import { sendApprovalEmail } from "@/lib/actions/email-actions";
 import { formatDate, formatCurrency, statusBadge } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -82,17 +81,17 @@ export function EmployeeDashboard({ projects, employeeName }: Props) {
     <div className="space-y-6">
       {/* Employee Greeting Header */}
       <Card className="border border-border/80 bg-gradient-to-r from-sky-50/50 to-indigo-50/50 dark:from-sky-950/20 dark:to-indigo-950/20">
-        <CardHeader className="flex flex-row items-center justify-between pb-4">
+        <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 gap-4">
           <div className="space-y-1">
             <div className="flex items-center gap-2">
               <Image src="/logo.png" alt="MadeWebs" width={24} height={24} className="object-contain animate-pulse" />
-              <CardTitle className="text-xl font-bold tracking-tight">Welcome back, {employeeName}!</CardTitle>
+              <CardTitle className="text-lg sm:text-xl font-bold tracking-tight">Welcome back, {employeeName}!</CardTitle>
             </div>
-            <CardDescription className="text-muted-foreground">
+            <CardDescription className="text-xs sm:text-sm text-muted-foreground">
               Here is your personal developer workspace. Keep track of deadlines and toggle assigned deliverables.
             </CardDescription>
           </div>
-          <Badge variant="info" className="px-2.5 py-1 text-xs">Employee Session</Badge>
+          <Badge variant="info" className="px-2.5 py-1 text-xs self-start sm:self-auto">Employee Session</Badge>
         </CardHeader>
       </Card>
 
@@ -164,7 +163,18 @@ export function EmployeeDashboard({ projects, employeeName }: Props) {
             const requiresAdminApproval = isPreCompletion && (project as any).reviewStatus !== "APPROVED";
 
             return (
-              <div key={project.id} className="rounded-lg border border-border p-5 space-y-4 bg-card shadow-sm hover:shadow-md transition-shadow">
+              <div 
+                key={project.id} 
+                className="rounded-lg border border-border p-5 space-y-4 bg-card shadow-sm hover:shadow-md transition-shadow cursor-pointer relative"
+                onClick={() => {
+                  const isCompleted = uiStatus === "COMPLETED" || uiStatus === "DELIVERED";
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  const hasClientChanges = (project as any).clientChanges?.trim() && !(project as any).clientApproved;
+                  if (!isCompleted || hasClientChanges) {
+                    setOpenTrackerId(project.id);
+                  }
+                }}
+              >
                 {/* Project Header Info */}
                 <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
                   <div className="space-y-1">
@@ -207,29 +217,37 @@ export function EmployeeDashboard({ projects, employeeName }: Props) {
                 </div>
 
                 {/* Workflow actions / Status advancement */}
-                <div className="rounded-md bg-muted/30 p-3 border border-border/50">
+                <div className="rounded-md bg-muted/30 p-3 border border-border/50" onClick={(e) => e.stopPropagation()}>
                   <div className="flex flex-col gap-3">
                     <div className="flex items-center justify-between gap-3">
                       <span className="text-xs text-muted-foreground">Detailed Tracker</span>
-                      {uiStatus === "COMPLETED" || uiStatus === "DELIVERED" ? (
-                        <span className="text-xs text-emerald-600 font-medium">Project completed!</span>
-                      ) : (
-                        <>
-                          <Button size="sm" variant="outline" className="text-xs" onClick={() => setOpenTrackerId(project.id)}>
-                            Open Project Tracker
-                          </Button>
-                          <Dialog open={openTrackerId === project.id} onClose={() => setOpenTrackerId(null)} className="max-w-4xl">
-                            <ProjectTracker initialProject={project} role="EMPLOYEE" onClose={() => setOpenTrackerId(null)} />
-                          </Dialog>
-                        </>
-                      )}
+                      {(() => {
+                        const isCompleted = uiStatus === "COMPLETED" || uiStatus === "DELIVERED";
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        const hasClientChanges = (project as any).clientChanges?.trim() && !(project as any).clientApproved;
+                        
+                        if (isCompleted && !hasClientChanges) {
+                          return <span className="text-xs text-emerald-600 font-medium bg-emerald-50 px-2 py-1 rounded">Project completed & locked</span>;
+                        }
+                        
+                        return (
+                          <>
+                            <Button size="sm" variant="outline" className="text-xs" onClick={() => setOpenTrackerId(project.id)}>
+                              {hasClientChanges ? "Open Tracker (Changes Requested!)" : "Open Project Tracker"}
+                            </Button>
+                            <Dialog open={openTrackerId === project.id} onClose={() => setOpenTrackerId(null)}>
+                              <ProjectTracker initialProject={project} role="EMPLOYEE" onClose={() => setOpenTrackerId(null)} />
+                            </Dialog>
+                          </>
+                        );
+                      })()}
                     </div>
                   </div>
                 </div>
 
                 {/* Website Deployed Link Input */}
                 {project.workType === "WEBSITE" && (
-                  <div className="rounded-md bg-muted/20 p-3 border border-border/50">
+                  <div className="rounded-md bg-muted/20 p-3 border border-border/50" onClick={(e) => e.stopPropagation()}>
                     <p className="text-xs font-semibold text-muted-foreground mb-2">Deployed Link</p>
                     <form 
                       action={async (formData) => {
@@ -289,18 +307,34 @@ export function EmployeeDashboard({ projects, employeeName }: Props) {
                   </div>
                   <div className="flex items-center gap-2">
                     {project.payments[0] && Number(project.payments[0].employeeSalary) > 0 && (
-                      <Badge 
-                        variant="default" 
-                        className={
-                          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                          (project.payments[0] as any).employeeSalaryPaid
-                            ? "bg-white text-emerald-700 border-emerald-200 dark:bg-zinc-950 dark:text-emerald-400 dark:border-emerald-900"
-                            : "bg-violet-100 text-violet-800 border-violet-200 dark:bg-violet-950/40 dark:text-violet-400 dark:border-violet-900"
-                        }
-                      >
+                      <div className="flex items-center gap-2">
+                        <Badge 
+                          variant="default" 
+                          className={
+                            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                            (project.payments[0] as any).employeeSalaryPaid
+                              ? "bg-white text-emerald-700 border-emerald-200 dark:bg-zinc-950 dark:text-emerald-400 dark:border-emerald-900"
+                              : "bg-violet-100 text-violet-800 border-violet-200 dark:bg-violet-950/40 dark:text-violet-400 dark:border-violet-900"
+                          }
+                        >
+                          {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                          {(project.payments[0] as any).employeeSalaryPaid ? "Paid" : "Pending Payout"}: {formatCurrency(Number(project.payments[0].employeeSalary))}
+                        </Badge>
                         {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                        {(project.payments[0] as any).employeeSalaryPaid ? "Paid" : "Pending Payout"}: {formatCurrency(Number(project.payments[0].employeeSalary))}
-                      </Badge>
+                        {!(project.payments[0] as any).employeeSalaryPaid && (
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="h-6 text-[10px] px-2"
+                            onClick={async () => {
+                              const text = `Hi Admin, just a reminder regarding my pending salary payout of ${formatCurrency(Number(project.payments[0].employeeSalary))} for the completed project: ${project.name}.`;
+                              window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
+                            }}
+                          >
+                            Remind Admin
+                          </Button>
+                        )}
+                      </div>
                     )}
                     <Badge variant={statusBadge(project.status as any)}>{project.status}</Badge>
                   </div>

@@ -33,6 +33,7 @@ const priorityMap: Record<string, Priority> = {
 };
 const reviewMap: Record<string, ReviewStatus> = {
   "Pending review": "PENDING_REVIEW", "Client reviewing": "CLIENT_REVIEWING",
+  Tested: "TESTED",
   "Client approved": "CLIENT_APPROVED", Approved: "APPROVED", "Changes requested": "CHANGES_REQUESTED",
 };
 
@@ -138,7 +139,13 @@ export async function createProject(data: {
   });
   revalidatePath("/");
   revalidatePath("/projects");
-  return project;
+  return { id: project.id };
+}
+
+function sanitizeNum(val: any) {
+  if (val === undefined) return undefined;
+  if (val === "" || val === null || isNaN(Number(val))) return 0;
+  return Number(val);
 }
 
 // ── Update ──────────────────────────────────────────────────────────────────
@@ -160,6 +167,7 @@ export async function updateProject(id: string, data: {
   totalPayment?: number;
   advancePayment?: number;
   employeeSalary?: number;
+  employeeSalaryPaid?: boolean;
   expenses?: number;
   websiteUrl?: string | null;
   deployedUrl?: string | null;
@@ -206,7 +214,7 @@ export async function updateProject(id: string, data: {
       ...(data.startDate && { startDate: new Date(data.startDate) }),
       ...(data.deadline && { deadline: new Date(data.deadline) }),
       ...(data.notes !== undefined && { notes: data.notes }),
-      ...(data.taskCompletion !== undefined && { taskCompletion: data.taskCompletion }),
+      ...(data.taskCompletion !== undefined && { taskCompletion: sanitizeNum(data.taskCompletion) }),
       ...(data.instagramPostCompleted !== undefined && { instagramPostCompleted: data.instagramPostCompleted }),
       ...(data.instagramStoryCompleted !== undefined && { instagramStoryCompleted: data.instagramStoryCompleted }),
       ...(data.deliveryCompleted !== undefined && { deliveryCompleted: data.deliveryCompleted }),
@@ -226,14 +234,14 @@ export async function updateProject(id: string, data: {
       ...(data.location !== undefined && { location: data.location }),
       ...(data.packageType !== undefined && { packageType: data.packageType }),
       ...(data.domainNeed !== undefined && { domainNeed: data.domainNeed }),
-      ...(data.totalAmount !== undefined && { totalAmount: data.totalAmount }),
-      ...(data.advanceAmount !== undefined && { advanceAmount: data.advanceAmount }),
-      ...(data.domainCharge !== undefined && { domainCharge: data.domainCharge }),
+      ...(data.totalAmount !== undefined && { totalAmount: sanitizeNum(data.totalAmount) }),
+      ...(data.advanceAmount !== undefined && { advanceAmount: sanitizeNum(data.advanceAmount) }),
+      ...(data.domainCharge !== undefined && { domainCharge: sanitizeNum(data.domainCharge) }),
       ...(data.setupChecklist !== undefined && { setupChecklist: data.setupChecklist }),
       ...(data.testingChecklist !== undefined && { testingChecklist: data.testingChecklist }),
       ...(data.clientChanges !== undefined && { clientChanges: data.clientChanges }),
       ...(data.clientApproved !== undefined && { clientApproved: data.clientApproved }),
-      ...(data.finalPaymentAmount !== undefined && { finalPaymentAmount: data.finalPaymentAmount }),
+      ...(data.finalPaymentAmount !== undefined && { finalPaymentAmount: sanitizeNum(data.finalPaymentAmount) }),
       ...(data.finalPaymentMode !== undefined && { finalPaymentMode: data.finalPaymentMode }),
       ...(data.domainChecklist !== undefined && { domainChecklist: data.domainChecklist }),
       ...(data.socialPostsChecklist !== undefined && { socialPostsChecklist: data.socialPostsChecklist }),
@@ -241,11 +249,27 @@ export async function updateProject(id: string, data: {
     },
   });
 
+  // Bidirectional sync for Final Approval -> COMPLETED
+  // If reviewStatus is updated to "Approved", implicitly grant adminApproval and complete the project.
+  // If adminApproval is set to true, explicitly mark as Approved and COMPLETED.
+  if (data.reviewStatus === "Approved" || data.reviewStatus === "APPROVED") {
+    await prisma.project.update({
+      where: { id },
+      data: { adminApproval: true, status: "COMPLETED", reviewStatus: "APPROVED" },
+    });
+  } else if (data.adminApproval === true) {
+    await prisma.project.update({
+      where: { id },
+      data: { reviewStatus: "APPROVED", status: "COMPLETED" },
+    });
+  }
+
   // Sync payment record from tracker fields (advanceAmount, finalPaymentAmount, totalAmount)
   const needsPaymentSync = (
     data.totalPayment !== undefined ||
     data.advancePayment !== undefined ||
     data.employeeSalary !== undefined ||
+    data.employeeSalaryPaid !== undefined ||
     data.expenses !== undefined ||
     data.totalAmount !== undefined ||
     data.advanceAmount !== undefined ||
@@ -264,13 +288,13 @@ export async function updateProject(id: string, data: {
       const currentAmountPaid = Number(payment.amountPaid);
 
       // Resolve new values — tracker fields take precedence
-      const newTotal = data.totalAmount ?? data.totalPayment ?? currentTotal;
-      const newAdvancePaid = data.advanceAmount ?? data.advancePayment ?? currentAdvancePaid;
+      const newTotal = sanitizeNum(data.totalAmount ?? data.totalPayment) ?? currentTotal;
+      const newAdvancePaid = sanitizeNum(data.advanceAmount ?? data.advancePayment) ?? currentAdvancePaid;
 
       // finalPaymentAmount from the Final Payment step
       const project = await prisma.project.findUnique({ where: { id }, select: { finalPaymentAmount: true } });
       const finalPaid = data.finalPaymentAmount !== undefined
-        ? Number(data.finalPaymentAmount)
+        ? Number(sanitizeNum(data.finalPaymentAmount))
         : Number(project?.finalPaymentAmount ?? 0);
 
       // Total paid = advance + final payment
@@ -288,8 +312,9 @@ export async function updateProject(id: string, data: {
           advancePayment: newAdvancePaid,
           amountPaid: newAmountPaid,
           status: newStatus,
-          ...(data.employeeSalary !== undefined && { employeeSalary: data.employeeSalary }),
-          ...(data.expenses !== undefined && { expenses: data.expenses }),
+          ...(data.employeeSalary !== undefined && { employeeSalary: sanitizeNum(data.employeeSalary) }),
+          ...(data.employeeSalaryPaid !== undefined && { employeeSalaryPaid: data.employeeSalaryPaid }),
+          ...(data.expenses !== undefined && { expenses: sanitizeNum(data.expenses) }),
         },
       });
 

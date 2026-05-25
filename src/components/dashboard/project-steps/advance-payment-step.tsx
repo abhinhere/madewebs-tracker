@@ -8,12 +8,13 @@ export function AdvancePaymentStep({ project, handleUpdate, role = "ADMIN", sync
   const defaultAdvance = project.totalAmount ? (Number(project.totalAmount) * 0.2) : 0;
   
   const [data, setData] = useState({
-    advanceAmount: project.advanceAmount ? Number(project.advanceAmount) : defaultAdvance,
+    advanceAmount: project.advanceAmount ? Number(project.advanceAmount) : "",
     domainCharge: project.domainCharge ? Number(project.domainCharge) : 0,
   });
 
   const handleChange = (e: any) => {
-    const newData = { ...data, [e.target.name]: Number(e.target.value) };
+    const value = e.target.value;
+    const newData = { ...data, [e.target.name]: value === '' ? '' : Number(value) };
     setData(newData);
     if (syncData) syncData(newData);
   };
@@ -39,7 +40,7 @@ export function AdvancePaymentStep({ project, handleUpdate, role = "ADMIN", sync
 
       <div className="space-y-2">
         <Label>Advance Payment Amount</Label>
-        <Input name="advanceAmount" type="number" value={data.advanceAmount} onChange={handleChange} onBlur={save} />
+        <Input name="advanceAmount" type="number" value={data.advanceAmount} onChange={handleChange} onBlur={save} placeholder={String(defaultAdvance)} />
       </div>
 
       {project.domainNeed && (

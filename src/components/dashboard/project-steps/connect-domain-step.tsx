@@ -31,6 +31,7 @@ export function ConnectDomainStep({ project, handleUpdate }: { project: any; han
             id="vercel" 
             checked={checklist.connectVercel} 
             onCheckedChange={(c) => handleCheck("connectVercel", !!c)} 
+            className="data-[state=checked]:bg-emerald-500 data-[state=checked]:text-white data-[state=checked]:border-emerald-500"
           />
           <Label htmlFor="vercel">Connect Vercel with Domain</Label>
         </div>
@@ -40,6 +41,7 @@ export function ConnectDomainStep({ project, handleUpdate }: { project: any; han
             id="ssl" 
             checked={checklist.sslVerification} 
             onCheckedChange={(c) => handleCheck("sslVerification", !!c)} 
+            className="data-[state=checked]:bg-emerald-500 data-[state=checked]:text-white data-[state=checked]:border-emerald-500"
           />
           <Label htmlFor="ssl">SSL Verification</Label>
         </div>
@@ -49,6 +51,7 @@ export function ConnectDomainStep({ project, handleUpdate }: { project: any; han
             id="meta" 
             checked={checklist.seoMeta} 
             onCheckedChange={(c) => handleCheck("seoMeta", !!c)} 
+            className="data-[state=checked]:bg-emerald-500 data-[state=checked]:text-white data-[state=checked]:border-emerald-500"
           />
           <Label htmlFor="meta">SEO Essential: Meta Tags</Label>
         </div>
@@ -58,6 +61,7 @@ export function ConnectDomainStep({ project, handleUpdate }: { project: any; han
             id="favicon" 
             checked={checklist.favicon} 
             onCheckedChange={(c) => handleCheck("favicon", !!c)} 
+            className="data-[state=checked]:bg-emerald-500 data-[state=checked]:text-white data-[state=checked]:border-emerald-500"
           />
           <Label htmlFor="favicon">Favicon Setup</Label>
         </div>
@@ -67,6 +71,7 @@ export function ConnectDomainStep({ project, handleUpdate }: { project: any; han
             id="sitemap" 
             checked={checklist.sitemap} 
             onCheckedChange={(c) => handleCheck("sitemap", !!c)} 
+            className="data-[state=checked]:bg-emerald-500 data-[state=checked]:text-white data-[state=checked]:border-emerald-500"
           />
           <Label htmlFor="sitemap">Sitemap Submitted</Label>
         </div>
@@ -76,6 +81,7 @@ export function ConnectDomainStep({ project, handleUpdate }: { project: any; han
             id="robots" 
             checked={checklist.robotsTxt} 
             onCheckedChange={(c) => handleCheck("robotsTxt", !!c)} 
+            className="data-[state=checked]:bg-emerald-500 data-[state=checked]:text-white data-[state=checked]:border-emerald-500"
           />
           <Label htmlFor="robots">Robots.txt verified</Label>
         </div>
@@ -85,6 +91,7 @@ export function ConnectDomainStep({ project, handleUpdate }: { project: any; han
             id="gmb" 
             checked={checklist.googleBusiness} 
             onCheckedChange={(c) => handleCheck("googleBusiness", !!c)} 
+            className="data-[state=checked]:bg-emerald-500 data-[state=checked]:text-white data-[state=checked]:border-emerald-500"
           />
           <Label htmlFor="gmb">Google Business Basic Setup</Label>
         </div>

@@ -1,12 +1,11 @@
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/lib/auth";
+import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { getTeamMembers } from "@/lib/actions/team-actions";
 import { getProjects } from "@/lib/actions/project-actions";
 import { TeamClient } from "@/components/dashboard/team-client";
 
 export default async function TeamPage() {
-  const session = await getServerSession(authOptions);
+  const session = await auth();
   if (!session) {
     redirect("/login");
   }

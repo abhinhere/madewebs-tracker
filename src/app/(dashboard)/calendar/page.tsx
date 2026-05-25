@@ -1,11 +1,10 @@
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/lib/auth";
+import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { getProjects } from "@/lib/actions/project-actions";
 import { UpcomingDeadlines } from "@/components/dashboard/agency-dashboard";
 
 export default async function CalendarPage() {
-  const session = await getServerSession(authOptions);
+  const session = await auth();
   if (!session) {
     redirect("/login");
   }

@@ -104,6 +104,7 @@ export function FinalApprovalStep({ project, handleUpdate, role = "ADMIN", onClo
             <Switch 
               checked={adminApproval} 
               onCheckedChange={handleApproval} 
+              disabled={!checklist.instagramPost || !checklist.worksPage || !checklist.googleBusiness}
             />
             <Label className="text-destructive font-semibold">Final Approval from Admin</Label>
           </div>

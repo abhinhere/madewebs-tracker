@@ -9,20 +9,23 @@ export function FinalPaymentStep({ project, handleUpdate, role = "ADMIN" }: { pr
   const remaining = Number(project.totalAmount || 0) - Number(project.advanceAmount || 0);
 
   const [data, setData] = useState({
-    finalPaymentAmount: project.finalPaymentAmount ? Number(project.finalPaymentAmount) : remaining,
+    finalPaymentAmount: project.finalPaymentAmount ? Number(project.finalPaymentAmount) : "",
     finalPaymentMode: project.finalPaymentMode || "",
-    employeeSalary: project.payments?.[0]?.employeeSalary || 0,
+    employeeSalary: project.payments?.[0]?.employeeSalary || "",
+    employeeSalaryPaid: project.payments?.[0]?.employeeSalaryPaid || false,
     expenses: project.payments?.[0]?.expenses || 0,
   });
 
   const handleChange = (e: any) => {
-    setData({ ...data, [e.target.name]: e.target.type === 'number' ? Number(e.target.value) : e.target.value });
+    const value = e.target.value;
+    setData({ ...data, [e.target.name]: e.target.type === 'number' ? (value === '' ? '' : Number(value)) : value });
   };
 
   const save = () => {
     handleUpdate({
       ...data,
       employeeSalary: Number(data.employeeSalary),
+      employeeSalaryPaid: Boolean(data.employeeSalaryPaid),
       expenses: Number(data.expenses),
     });
   };
@@ -45,7 +48,7 @@ export function FinalPaymentStep({ project, handleUpdate, role = "ADMIN" }: { pr
 
       <div className="space-y-2">
         <Label>Final Payment Amount</Label>
-        <Input name="finalPaymentAmount" type="number" value={data.finalPaymentAmount} onChange={handleChange} onBlur={save} />
+        <Input name="finalPaymentAmount" type="number" value={data.finalPaymentAmount} onChange={handleChange} onBlur={save} placeholder={String(remaining)} />
       </div>
 
       <div className="space-y-2">
@@ -65,9 +68,24 @@ export function FinalPaymentStep({ project, handleUpdate, role = "ADMIN" }: { pr
         </Select>
       </div>
 
-      <div className="space-y-2">
+      <div className="space-y-2 pt-2 pb-2 border-t border-b">
         <Label>Employee Salary</Label>
-        <Input name="employeeSalary" type="number" value={data.employeeSalary} onChange={handleChange} onBlur={save} />
+        <Input name="employeeSalary" type="number" value={data.employeeSalary} onChange={handleChange} onBlur={save} placeholder={String(project.totalAmount ? Number(project.totalAmount) * 0.75 : 0)} />
+        
+        <div className="flex items-center space-x-2 pt-2">
+          <input 
+            type="checkbox" 
+            id="salaryPaid"
+            checked={data.employeeSalaryPaid} 
+            onChange={(e) => {
+              const checked = e.target.checked;
+              setData({ ...data, employeeSalaryPaid: checked });
+              handleUpdate({ ...data, employeeSalaryPaid: checked });
+            }} 
+            className="w-4 h-4 text-emerald-600 bg-gray-100 border-gray-300 rounded focus:ring-emerald-500"
+          />
+          <Label htmlFor="salaryPaid" className="cursor-pointer">Mark Employee Salary as Paid</Label>
+        </div>
       </div>
 
       <div className="space-y-2">

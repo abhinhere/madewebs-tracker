@@ -12,6 +12,7 @@ import {
   TrendingUp,
 } from "lucide-react";
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn, formatCurrency, initials, statusBadge } from "@/lib/utils";
@@ -44,6 +45,10 @@ export function DashboardOverview({ projects, clients, payments }: DashboardOver
     [projects, payments],
   );
 
+  const completedProjects = useMemo(() => {
+    return enrichedProjects.filter((project) => ["COMPLETED", "DELIVERED"].includes(project.status));
+  }, [enrichedProjects]);
+
   const metrics = useMemo(() => {
     const active = projects.filter((project) => !["COMPLETED", "DELIVERED"].includes(project.status));
     const pendingRev = projects.filter((project) => project.reviewStatus !== "APPROVED");
@@ -70,7 +75,9 @@ export function DashboardOverview({ projects, clients, payments }: DashboardOver
   return (
     <>
       <section className="grid gap-3 grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
-        <MetricCard title="Active projects" value={String(metrics.activeProjects)} helper="In planning, design, build, or review" icon={PanelsTopLeft} />
+        <Link href="/projects" className="contents">
+          <MetricCard title="Active projects" value={String(metrics.activeProjects)} helper="In planning, design, build, or review" icon={PanelsTopLeft} />
+        </Link>
         <MetricCard title="Pending reviews" value={String(metrics.pendingReviews)} helper="Internal or client review needed" icon={ListChecks} />
         <MetricCard title="Monthly revenue" value={formatCurrency(metrics.monthlyRevenue)} helper="Collected from active accounts" icon={CircleDollarSign} />
         <MetricCard title="Pending payments" value={formatCurrency(metrics.pendingPayments)} helper="Open invoices and balances" icon={AlarmClock} tone="warning" />
@@ -87,6 +94,32 @@ export function DashboardOverview({ projects, clients, payments }: DashboardOver
         <ClientManagement clients={clients} />
         <ActivityAndNotifications />
       </section>
+
+      {completedProjects.length > 0 && (
+        <section className="mt-8">
+          <Card>
+            <CardHeader>
+              <CardTitle>Completed projects</CardTitle>
+              <CardDescription>Archive of finalized work and completed deliverables.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {completedProjects.map((project) => (
+                  <div key={project.id} className="flex items-center justify-between p-3 rounded-lg border border-border bg-muted/20">
+                    <div>
+                      <h3 className="text-sm font-semibold">{project.name}</h3>
+                      <p className="text-xs text-muted-foreground">
+                        Client: <span className="font-medium text-foreground">{project.client?.name}</span>
+                      </p>
+                    </div>
+                    <Badge variant={statusBadge(project.status as any)}>{project.status}</Badge>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </section>
+      )}
     </>
   );
 }
@@ -105,8 +138,8 @@ export function MetricCard({
   tone?: "default" | "warning" | "success";
 }) {
   return (
-    <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }}>
-      <Card>
+    <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }} className="h-full">
+      <Card className="h-full hover:shadow-md transition-shadow cursor-pointer">
         <CardHeader className="flex-row items-center justify-between space-y-0 pb-3">
           <CardTitle className="text-muted-foreground">{title}</CardTitle>
           <div className={cn(

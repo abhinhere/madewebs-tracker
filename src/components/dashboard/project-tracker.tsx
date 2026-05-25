@@ -51,6 +51,7 @@ export function ProjectTracker({ initialProject, clients, role = "ADMIN", onClos
 
   const syncData = (data: any) => {
     pendingDataRef.current = { ...pendingDataRef.current, ...data };
+    setProject((prev: any) => ({ ...prev, ...data }));
   };
 
   const visibleSteps = ALL_STEPS.map((label, index) => ({ label, originalIndex: index }))
@@ -91,6 +92,12 @@ export function ProjectTracker({ initialProject, clients, role = "ADMIN", onClos
       pendingDataRef.current = {};
       const nextVisibleStep = visibleSteps[activeVisibleIndex + 1];
       const nextStepDbValue = nextVisibleStep.originalIndex + 1;
+      
+      // Auto-update to TESTED when completing Testing step
+      if (visibleSteps[activeVisibleIndex].originalIndex === 3) {
+        pendingData.reviewStatus = "TESTED";
+      }
+
       setCurrentOriginalIndex(nextVisibleStep.originalIndex); // Instant update
       handleUpdate({ ...pendingData, currentStep: nextStepDbValue }); // Async in background
     }
@@ -104,6 +111,45 @@ export function ProjectTracker({ initialProject, clients, role = "ADMIN", onClos
       const prevStepDbValue = prevVisibleStep.originalIndex + 1;
       setCurrentOriginalIndex(prevVisibleStep.originalIndex); // Instant update
       handleUpdate({ ...pendingData, currentStep: prevStepDbValue }); // Async in background
+    }
+  };
+
+  const canProceedToNext = () => {
+    if (activeVisibleIndex < 0 || activeVisibleIndex >= visibleSteps.length) return true;
+    const activeStepOriginalIndex = visibleSteps[activeVisibleIndex].originalIndex;
+
+    switch (activeStepOriginalIndex) {
+      case 0: { // Requirement Collection
+        const hasAmount = !!project.totalAmount && Number(project.totalAmount) > 0;
+        const hasLocation = !!project.location?.trim();
+        const hasPackage = !!project.packageType?.trim();
+        const hasBusiness = !!project.businessName?.trim();
+        return hasAmount && hasLocation && hasPackage && hasBusiness;
+      }
+      case 1: { // Advance Payment
+        return Number(project.advanceAmount) > 0;
+      }
+      case 2: { // Setup & Build
+        const setup = project.setupChecklist || {};
+        return setup.structureCreated && setup.gitRepo && setup.pushedCode && setup.deployedVercel && !!project.deployedUrl?.trim();
+      }
+      case 3: { // Testing
+        const testing = project.testingChecklist || {};
+        return testing.responsive && testing.featuresFunctioning && testing.basicSeo;
+      }
+      case 4: { // Client Review
+        return !!project.clientApproved;
+      }
+      case 5: { // Final Payment
+        const currentSalary = project.employeeSalary !== undefined ? project.employeeSalary : project.payments?.[0]?.employeeSalary;
+        return currentSalary !== undefined && currentSalary !== null && currentSalary !== "";
+      }
+      case 6: { // Connect Domain
+        const domain = project.domainChecklist || {};
+        return domain.connectVercel && domain.sslVerification && domain.seoMeta && domain.favicon && domain.sitemap && domain.robotsTxt && domain.googleBusiness;
+      }
+      default:
+        return true;
     }
   };
 
@@ -196,7 +242,8 @@ export function ProjectTracker({ initialProject, clients, role = "ADMIN", onClos
                 onClick={handleNextStep}
                 disabled={
                   isSaving || 
-                  (role === "EMPLOYEE" && visibleSteps[activeVisibleIndex].originalIndex === 4 && !project.clientApproved)
+                  (role === "EMPLOYEE" && visibleSteps[activeVisibleIndex].originalIndex === 4 && !project.clientApproved) ||
+                  !canProceedToNext()
                 }
               >
                 Next Step <ChevronRight className="ml-2 h-4 w-4" />

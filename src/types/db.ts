@@ -68,6 +68,7 @@ export function labelWorkType(s: string) {
 export function labelReviewStatus(s: string) {
   const map: Record<string, string> = {
     PENDING_REVIEW: "Pending review", CLIENT_REVIEWING: "Client reviewing",
+    TESTED: "Tested",
     CLIENT_APPROVED: "Client approved", APPROVED: "Approved", CHANGES_REQUESTED: "Changes requested",
   };
   return map[s] ?? s;
