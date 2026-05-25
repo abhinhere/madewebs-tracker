@@ -12,6 +12,8 @@ import {
   Plus,
   Sparkles,
   Users,
+  Globe,
+  CreditCard,
   LogOut,
   Menu,
   X,
@@ -22,6 +24,8 @@ import { cn } from "@/lib/utils";
 const navItems = [
   { label: "Dashboard", href: "/", icon: LayoutDashboard },
   { label: "Projects", href: "/projects", icon: PanelsTopLeft, adminOnly: true },
+  { label: "Domains", href: "/domains", icon: Globe, adminOnly: true },
+  { label: "Payments", href: "/payments", icon: CreditCard, adminOnly: true },
   { label: "Team", href: "/team", icon: Users, adminOnly: true },
   { label: "Calendar", href: "/calendar", icon: CalendarDays },
 ];
